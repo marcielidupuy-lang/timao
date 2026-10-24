@@ -36,7 +36,7 @@ O seletor no topo troca entre **Implantador** e **Prefeitura**. Cada visão tem 
 
 | Implantador | Prefeitura |
 |---|---|
-| **Minha carteira:** as 4 implantações com o progresso e, embaixo, um quadro só com o que está parado em todas: Comigo, Com os clientes e Com o agente (dá pra filtrar por prefeitura) | **Início:** 4 cards que abrem o detalhe (Entrega com o escopo do contrato na linha do tempo, Com você, Go-live e Agenda de reunião) e atalhos do ai.aprova em botões |
+| **Minha carteira:** um quadro só com o que está parado em todas as implantações: Comigo, Com os clientes e Com o agente. Mostra todos os clientes ou as contas escolhidas na busca; o nome da conta abre o cliente, e só aí o menu dele aparece na lateral | **Início:** 4 cards que abrem o detalhe (Entrega com o escopo do contrato na linha do tempo, Com você, Go-live e Agenda de reunião) e atalhos do ai.aprova em botões |
 | **Visão geral:** indicadores, próximas reuniões, o que o agente fez e o mesmo quadro (Comigo, Com a prefeitura, Com o agente) só deste cliente | **Validações:** vídeos em reel, com Aprovar e Ajustar junto do campo do ai.aprova |
 | **Fases e tarefas:** as tarefas do agente têm uma seta → que abre a execução na lateral | **Agenda:** calendário com as entregas do contrato, reuniões, prazos da equipe e o go-live |
 | **Agenda e reuniões:** próximas reuniões com pauta, o calendário e as realizadas com os acionáveis | **Minha equipe:** convidar pelo WhatsApp |

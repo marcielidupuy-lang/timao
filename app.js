@@ -205,13 +205,14 @@
     $("#who").innerHTML = ROLE === "i"
       ? `<span class="who-k">Implantadora</span><b>${esc(c.implantador)}</b>`
       : `<span class="who-k">${esc(c.nome)}</span><b>${esc(c.champion)}</b>`;
-    const items = rotas(ROLE);
+    // Na carteira nenhum cliente está aberto: o menu do cliente só aparece depois de clicar num.
+    const items = ROLE === "i" && PAGE === "carteira" ? rotas(ROLE).slice(0, 1) : rotas(ROLE);
     const link = (r) => {
       const n = r.badge ? r.badge() : 0;
       return `<a class="nav2-item ${r.id === PAGE ? "on" : ""}" href="#/${ROLE}/${r.id}"><span class="ni">${I[r.ic]}</span>${r.nome}${n ? `<span class="badge">${n}</span>` : ""}</a>`;
     };
     if (ROLE === "i") {
-      $("#nav").innerHTML = link(items[0]) + `<div class="nav2-label">${esc(c.nome.replace("Prefeitura de ", ""))} · ${c.uf}</div>` + items.slice(1).map(link).join("");
+      $("#nav").innerHTML = link(items[0]) + (items.length > 1 ? `<div class="nav2-label">${esc(c.nome.replace("Prefeitura de ", ""))} · ${c.uf}</div>` + items.slice(1).map(link).join("") : "");
       $("#nav2Extra").innerHTML = `<div class="nav2-label">Instruções do agente</div><a class="nav2-item small" href="${REPO}" target="_blank" rel="noopener"><span class="ni">${I.bolt}</span>Abrir pasta INSTRUCTIONS</a>`;
     } else {
       $("#nav").innerHTML = items.map(link).join("");
@@ -396,7 +397,7 @@
     ["cliente", "Com os clientes", "o agente cobra no WhatsApp"],
     ["agente", "Com o agente", "a seta executa; o Automode roda todas"]
   ];
-  let CART_F = "todas";
+  const CART_F = new Set();
   const CART_MAIS = new Set();
   function filaVV() {
     const cid = S.cliente.nome.replace("Prefeitura de ", "");
@@ -419,20 +420,29 @@
     const outras = (window.DATA.carteira || []).map((p) => ({ ...p, fila: (p.fila || []).map((x) => ({ ...x, cid: p.nome, acao: `<button class="btn sm ghost" data-outra="1">Abrir</button>` })) }));
     return [vv, ...outras].sort((a, b) => ORDEM_SAUDE[a.saude] - ORDEM_SAUDE[b.saude]);
   }
-  const ring = (pct) => `<span class="ring" style="--p:${pct}"><b>${pct}%</b></span>`;
-  function pcardHTML(p) {
-    const n = (lado) => p.fila.filter((x) => x.lado === lado).length;
-    const urg = p.fila.filter((x) => x.urg).length;
-    const corpo = `<div class="pc-top">${ring(p.pct)}<div class="pc-name"><b>${esc(p.nome)} · ${p.uf}</b><small>${esc(p.fase)}</small></div></div>
-      <span class="saude ${p.saude}">${SAUDE[p.saude]}${urg ? ` · ${urg} urgente${urg > 1 ? "s" : ""}` : ""}</span>
-      <div class="pc-nums"><span><b>${n("mim")}</b>comigo</span><span><b>${n("cliente")}</b>com o cliente</span><span><b>${n("agente")}</b>com o agente</span></div>
-      <div class="pc-foot"><span>${p.proxima ? `${I.cal}${dia(p.proxima)} · ${hora(p.proxima)}` : "Sem reunião"}</span><span>go-live ${dia(p.meta + "T09:00")}</span></div>`;
-    return p.aberta
-      ? `<a class="pcard s-${p.saude}" href="#/i/visao" title="Abrir ${esc(p.nome)}">${corpo}</a>`
-      : `<button type="button" class="pcard s-${p.saude}" data-outra="1" title="Abrir ${esc(p.nome)}">${corpo}</button>`;
-  }
+  // Nome da conta que abre o cliente: só Vale Verde tem dados na demo.
+  const abrirConta = (nome) => nome === S.cliente.nome.replace("Prefeitura de ", "")
+    ? `<a class="cid" href="#/i/visao" title="Abrir o cliente">${esc(nome)}</a>`
+    : `<button type="button" class="cid" data-outra="1" title="Abrir o cliente">${esc(nome)}</button>`;
   function bitemHTML(x, comCidade) {
-    return `<div class="bitem ${x.urg ? "urg" : ""}"><span class="qi ${x.tom || ""}">${I[x.ic] || I.dot}</span><div class="qt">${comCidade ? `<span class="cid">${esc(x.cid)}</span>` : ""}<b>${esc(x.t)}</b><span>${esc(x.s)}</span></div>${x.acao ? `<div class="qa">${x.acao}</div>` : ""}</div>`;
+    return `<div class="bitem ${x.urg ? "urg" : ""}"><span class="qi ${x.tom || ""}">${I[x.ic] || I.dot}</span><div class="qt">${comCidade ? abrirConta(x.cid) : ""}<b>${esc(x.t)}</b><span>${esc(x.s)}</span></div>${x.acao ? `<div class="qa">${x.acao}</div>` : ""}</div>`;
+  }
+  // Seletor de contas: "Todos os clientes" ou as contas escolhidas pela busca.
+  function contasHTML(todas) {
+    const sel = todas.filter((p) => CART_F.has(p.nome));
+    return `<div class="contas">
+      <button type="button" class="ct-chip ${sel.length ? "" : "on"}" data-cartf="todas">Todos os clientes</button>
+      ${sel.map((p) => `<span class="ct-chip on"><span class="saude ${p.saude}"></span>${esc(p.nome)} · ${p.uf}<button type="button" class="ct-x" data-cartrm="${esc(p.nome)}" aria-label="Tirar ${esc(p.nome)}">${I.x}</button></span>`).join("")}
+      <div class="ct-busca"><input type="search" placeholder="Buscar conta…" aria-label="Buscar conta" autocomplete="off" data-cartbusca="1"><div class="ct-res" hidden></div></div>
+      ${sel.length === 1 ? (sel[0].aberta ? `<a class="btn sm ghost" href="#/i/visao">Abrir ${esc(sel[0].nome)} ${I.right}</a>` : `<button type="button" class="btn sm ghost" data-outra="1">Abrir ${esc(sel[0].nome)} ${I.right}</button>`) : ""}
+    </div>`;
+  }
+  function contasBusca(input) {
+    const q = semAcento(input.value.trim());
+    const res = input.parentElement.querySelector(".ct-res");
+    const lista = carteiraTodas().filter((p) => !CART_F.has(p.nome) && semAcento(p.nome + " " + p.uf).includes(q));
+    res.innerHTML = lista.map((p) => `<button type="button" data-cartadd="${esc(p.nome)}"><span class="saude ${p.saude}"></span><b>${esc(p.nome)} · ${p.uf}</b><small>${p.fila.length} pendência${p.fila.length === 1 ? "" : "s"}</small></button>`).join("") || `<p class="empty">Nenhuma conta com esse nome.</p>`;
+    res.hidden = false;
   }
   function quadroHTML(itens, comCidade, limite = 6) {
     return `<div class="board">${LADOS.map(([k, nome, hint]) => {
@@ -446,17 +456,14 @@
   VIEWS["i/carteira"] = () => {
     const c = S.cliente;
     const todas = carteiraTodas();
-    if (CART_F !== "todas" && !todas.some((p) => p.nome === CART_F)) CART_F = "todas";
+    [...CART_F].forEach((k) => { if (!todas.some((p) => p.nome === k)) CART_F.delete(k); });
     const itens = todas.flatMap((p) => p.fila);
     const atencao = todas.filter((p) => p.saude !== "ok").length;
-    const n = (lado) => itens.filter((x) => x.lado === lado).length;
-    const vis = CART_F === "todas" ? itens : itens.filter((x) => x.cid === CART_F);
-    const chips = [["todas", `Todas · ${itens.length}`], ...todas.map((p) => [p.nome, `${p.nome} · ${p.fila.length}`])];
-    return hero("Minha carteira", `${saudacao()}, ${esc(c.implantador.split(" ")[0])}.`, `${todas.length} implantações, ${atencao} pedem atenção.`, `${n("mim")} coisas com você, ${n("cliente")} com os clientes e ${n("agente")} com o agente. 74h de reunião evitada nas ${todas.length} implantações.`) +
-      `<div class="pgrid">${todas.map(pcardHTML).join("")}</div>` +
-      `<div class="block-sm">${secTitle("O que está parado", "de todas as implantações, num lugar só")}
-        <div class="filters left" role="tablist">${chips.map(([k, l]) => `<button role="tab" data-cartf="${esc(k)}" aria-selected="${k === CART_F}">${esc(l)}</button>`).join("")}</div>
-        ${quadroHTML(vis, CART_F === "todas")}</div>`;
+    const vis = CART_F.size ? itens.filter((x) => CART_F.has(x.cid)) : itens;
+    const n = (lado) => vis.filter((x) => x.lado === lado).length;
+    return hero("Minha carteira", `${saudacao()}, ${esc(c.implantador.split(" ")[0])}.`, `${todas.length} implantações, ${atencao} pedem atenção.`, `${n("mim")} coisas com você, ${n("cliente")} com os clientes e ${n("agente")} com o agente.`) +
+      contasHTML(todas) +
+      quadroHTML(vis, CART_F.size !== 1);
   };
 
   // Indicadores da implantação: os mesmos nas duas visões, só muda quem é "a prefeitura"
@@ -1470,7 +1477,11 @@
     }
     if ((x = el("[data-open]"))) { if (x.closest("#drawer")) closeDrawer(); openPlayer(x.dataset.open); return; }
     if ((x = el("[data-filtro]"))) { filtro = x.dataset.filtro; refresh(); return; }
-    if ((x = el("[data-cartf]"))) { CART_F = x.dataset.cartf; CART_MAIS.clear(); refresh(); return; }
+    if (el("[data-cartf]")) { CART_F.clear(); CART_MAIS.clear(); refresh(); return; }
+    if ((x = el("[data-cartadd]"))) { CART_F.add(x.dataset.cartadd); CART_MAIS.clear(); refresh(); return; }
+    if ((x = el("[data-cartrm]"))) { CART_F.delete(x.dataset.cartrm); CART_MAIS.clear(); refresh(); return; }
+    // Clique fora da busca de contas fecha a lista.
+    if (!el(".ct-busca")) document.querySelectorAll(".ct-res").forEach((r) => (r.hidden = true));
     if ((x = el("[data-cartmais]"))) { CART_MAIS.add(x.dataset.cartmais); refresh(); return; }
     if (el("[data-outra]")) { toast("Na demo, só Vale Verde tem dados."); return; }
     if ((x = el("[data-revisar]"))) {
@@ -1561,6 +1572,14 @@
         save(); toast(`Reunião solicitada para ${dia(iso)} às ${hora(iso)}. Convite enviado no WhatsApp.`);
       });
     }
+  });
+  // Busca de contas na carteira: abre a lista ao focar, filtra ao digitar, Enter escolhe a primeira.
+  document.addEventListener("focusin", (e) => { if (e.target.matches("[data-cartbusca]")) contasBusca(e.target); });
+  document.addEventListener("input", (e) => { if (e.target.matches("[data-cartbusca]")) contasBusca(e.target); });
+  document.addEventListener("keydown", (e) => {
+    if (!e.target.matches("[data-cartbusca]")) return;
+    if (e.key === "Enter") { e.preventDefault(); const b = e.target.parentElement.querySelector("[data-cartadd]"); if (b) b.click(); }
+    if (e.key === "Escape") { e.stopImmediatePropagation(); e.target.parentElement.querySelector(".ct-res").hidden = true; e.target.blur(); }
   });
   document.addEventListener("change", (e) => {
     const up = e.target.closest("[data-upload]");
