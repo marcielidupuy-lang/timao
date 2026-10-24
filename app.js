@@ -207,7 +207,7 @@
       $("#nav2Extra").innerHTML = `<div class="nav2-label">Instruções do agente</div><a class="nav2-item small" href="${REPO}" target="_blank" rel="noopener"><span class="ni">${I.bolt}</span>Abrir pasta INSTRUCTIONS</a>`;
     } else {
       $("#nav").innerHTML = items.map(link).join("");
-      $("#nav2Extra").innerHTML = `<div class="help-card"><b>Precisa de ajuda?</b><span>Fale com a Aprova pelo WhatsApp ou pelo ai.aprova no Início.</span></div>`;
+      $("#nav2Extra").innerHTML = `<div class="help-card"><b>Precisa de ajuda?</b><span>Fale com a Aprova pelo WhatsApp ou pelo ai.aprova no Início.</span>${PN().blocos.ai ? `<button class="btn sm" data-ajuda="1">${I.chat}Sim</button>` : ""}</div>`;
     }
     $("#navM").innerHTML = items.map((r) => { const n = r.badge ? r.badge() : 0; return `<a class="${r.id === PAGE ? "on" : ""}" href="#/${ROLE}/${r.id}">${r.nome}${n ? ` <span class="badge">${n}</span>` : ""}</a>`; }).join("");
     const cur = items.find((r) => r.id === PAGE);
@@ -665,12 +665,11 @@
     const B = PN().blocos;
     const n = doCliente().filter(visivel).length + (B.validacoes ? vidsPend().length : 0);
     const avisos = PN().avisos.map((a) => `<div class="aviso"><span class="qi cyan">${I.megaphone}</span><div class="qt"><b>${esc(a.titulo)}</b><span>${esc(a.texto)}</span></div></div>`).join("");
-    const links = PN().links.length ? `<section class="card"><div class="card-h"><h3>Links e documentos</h3></div><ul class="links">${PN().links.map((l) => `<li><a href="${esc(l.url)}" target="_blank" rel="noopener">${I.link}${esc(l.titulo)}</a></li>`).join("")}</ul></section>` : "";
+    // O título "Por onde começamos?" fica em cima do chat, dentro do aiBox.
     return `<section class="phead hello"><h1>Olá, ${esc(c.contato)}.<span>${n ? `${n} coisa${n > 1 ? "s" : ""} depende${n > 1 ? "m" : ""} de você.` : "Nada depende de você hoje."}</span></h1></section>` +
       (avisos ? `<div class="avisos">${avisos}</div>` : "") +
       (B.indicadores ? kpisHTML("c") : "") +
-      (B.ai ? `<section class="ask left"><h2 class="ask-h">Por onde começamos?</h2><div data-ai="c"></div></section>` : "") +
-      (links ? `<div class="block-sm">${links}</div>` : "");
+      (B.ai ? `<section class="ask left"><div data-ai="c"></div></section>` : "");
   };
 
   function editorHTML() {
@@ -684,9 +683,6 @@
       <section class="ed-sec"><h4>Avisos</h4>
         <ul class="ed-items">${p.avisos.map((a) => `<li><div class="qt"><b>${esc(a.titulo)}</b><span>${esc(a.texto)}</span></div><button class="dr-x" data-delaviso="${a.id}" aria-label="Remover aviso">${I.trash}</button></li>`).join("") || `<li class="empty">Nenhum aviso.</li>`}</ul>
         <form class="ed-form" data-add="aviso"><input name="titulo" placeholder="Título do aviso" required><textarea name="texto" rows="2" placeholder="Texto curto pra prefeitura" required></textarea><button class="btn sm" type="submit">${I.plus}Adicionar aviso</button></form></section>
-      <section class="ed-sec"><h4>Links e documentos</h4>
-        <ul class="ed-items">${p.links.map((l) => `<li><div class="qt"><b>${esc(l.titulo)}</b><span>${esc(l.url)}</span></div><button class="dr-x" data-dellink="${l.id}" aria-label="Remover link">${I.trash}</button></li>`).join("") || `<li class="empty">Nenhum link.</li>`}</ul>
-        <form class="ed-form" data-add="link"><input name="titulo" placeholder="Nome (ex.: Lei do Alvará)" required><input name="url" type="url" placeholder="https://…" required><button class="btn sm" type="submit">${I.plus}Adicionar link</button></form></section>
       <section class="ed-sec"><h4>Tarefas que a prefeitura vê</h4>
         <ul class="ed-list">${tarefas.map(({ t, f }) => { const on = visivel(t); return `<li class="${on ? "" : "off"}"><div class="qt"><b>${esc(t.titulo)}</b><span>${esc(f.nome)} · ${DONO.i[t.dono]}</span></div><button class="btn sm ghost eye" data-ocultar="${t.id}">${on ? I.eye + "Visível" : I.eyeoff + "Escondida"}</button></li>`; }).join("")}</ul></section>`;
   }
@@ -791,7 +787,14 @@
         { ic: "cal", t: "Montar pauta da próxima reunião", d: "Com o que falta decidir em cada processo." }
       ]
     } : atalhosPrefeitura())));
+    // "Precisa de ajuda? Sim" na lateral: o chat do Início recebe o pedido.
+    if (AJUDA) {
+      const box = $('[data-ai="c"] .ai');
+      AJUDA = false;
+      if (box) { box.scrollIntoView({ behavior: "smooth", block: "center" }); box.send("Preciso de ajuda"); }
+    }
   }
+  let AJUDA = false;
   // Atalhos da prefeitura: cada botão manda o pedido pro chat ao lado. O que está atrasado vem primeiro.
   function atalhosPrefeitura() {
     const vids = vidsPend().length;
@@ -805,6 +808,7 @@
     const doc = minhas.find((t) => envio(t) && !isLate(t));
     return {
       compacto: true,
+      titulo: "Por onde começamos?",
       placeholder: "Escreva para a Aprova: texto, áudio ou anexo…",
       sugs: [
         ...atrasadas,
@@ -827,7 +831,7 @@
   }
 
   // ---------- ai.aprova (simulado na demo; em produção é o agente) ----------
-  function aiBox({ placeholder, sugs = [], ctx = null, compacto = false, saudacao = "" }) {
+  function aiBox({ placeholder, sugs = [], ctx = null, compacto = false, saudacao = "", titulo = "" }) {
     const box = document.createElement("div");
     box.className = compacto ? "ai compacto" : "ai";
     // Compacto: atalhos pequenos (ícone, título, linha curta e seta pro chat) numa coluna, o chat ao lado.
@@ -835,7 +839,7 @@
       ? `<button type="button" class="sug tone-${s.tone || "ink"} ${s.hot ? "hot" : ""}" data-msg="${esc(s.msg || s.t)}"${s.acao ? ` data-acao="${s.acao}"` : ""} title="${esc(s.d)}"><span class="sg-ic">${I[s.ic]}</span><span class="sg-t"><b>${esc(s.t)}</b>${s.sub ? `<small>${esc(s.sub)}</small>` : ""}</span><span class="arr">${I.right}</span></button>`
       : `<button type="button" class="sug" data-msg="${esc(s.msg || s.t)}">${I[s.ic]}<b>${esc(s.t)}</b><span>${esc(s.d)}</span></button>`;
     const sugsHTML = sugs.length ? `<ul class="sugs">${sugs.map((s) => `<li>${sugHTML(s)}</li>`).join("")}</ul>` : "";
-    box.innerHTML = (compacto ? `${sugsHTML}<div class="ai-chat">` : "") + `<div class="ai-log"></div>
+    box.innerHTML = (compacto ? `${sugsHTML}<div class="ai-chat">${titulo ? `<h2 class="ask-h">${esc(titulo)}</h2>` : ""}` : "") + `<div class="ai-log"></div>
       <form class="box">
         <textarea rows="2" placeholder="${esc(placeholder)}" aria-label="Mensagem para o ai.aprova"></textarea>
         <div class="box-row">
@@ -918,6 +922,7 @@
         input.placeholder = "Gravando… toque de novo para enviar";
       }
     });
+    box.send = send;
     return box;
   }
 
@@ -942,6 +947,9 @@
       log("painel", `Ajuste pedido no vídeo do ${v.processo}: "${text}". Agente atualizou o ${v.ticket} e já está ajustando`);
       save(); afterChange(v.id);
       return `Anotado. Já estou ajustando o <b>${esc(v.processo)}</b> e te mando um vídeo novo em até 2h, aqui e no WhatsApp.`;
+    }
+    if (ROLE === "c" && t.includes("ajuda")) {
+      return `Claro, ${esc(S.cliente.contato)}! Eu consigo:\n• <b>Receber documentos</b> (lei, foto do formulário, planilha) e dar baixa na pendência certa\n• <b>Mostrar os vídeos de validação</b> pra você aprovar ou pedir ajuste\n• <b>Alterar um formulário</b>: é só dizer o que muda, por texto ou áudio\n• <b>Cadastrar sua equipe</b> mandando o link no WhatsApp\n• <b>Contar o próximo passo</b>, os prazos e a data do go-live\n• <b>Confirmar ou remarcar</b> uma reunião\n• <b>Abrir um chamado</b> com qualquer dúvida\n\nClique num atalho ao lado ou me escreva aqui.`;
     }
     if (ROLE === "i") {
       if (t.includes("resumo")) {
@@ -1359,6 +1367,11 @@
       return;
     }
     if (e.target.id === "scrim") { closeDrawer(); return; }
+    if (el("[data-ajuda]")) {
+      AJUDA = true;
+      if (PAGE === "inicio") refresh(); else go("c", "inicio");
+      return;
+    }
     if ((x = el("[data-calmes]"))) {
       const n = new Date(CAL.y, CAL.m + Number(x.dataset.calmes), 1);
       CAL.y = n.getFullYear(); CAL.m = n.getMonth();
