@@ -132,7 +132,6 @@
     ],
     c: [
       { id: "inicio", nome: "Início", ic: "home", badge: () => doCliente().length + vidsPend().length },
-      { id: "andamento", nome: "Andamento", ic: "chart" },
       { id: "validacoes", nome: "Validações", ic: "video", badge: () => vidsPend().length },
       { id: "reunioes", nome: "Reuniões", ic: "meet" },
       { id: "equipe", nome: "Minha equipe", ic: "users" }
@@ -142,6 +141,8 @@
   function parseHash() {
     const m = location.hash.match(/^#\/(i|c)\/([a-z]+)/);
     if (m && ROUTES[m[1]].some((r) => r.id === m[2])) { ROLE = m[1]; PAGE = m[2]; return; }
+    // Tela que não existe mais (ex.: #/c/andamento): fica na mesma visão, na primeira tela.
+    if (m) { ROLE = m[1]; PAGE = ROUTES[ROLE][0].id; return; }
     let r = "i";
     try { r = localStorage.getItem("timao-role") || "i"; } catch (e) {}
     ROLE = r === "c" ? "c" : "i";
@@ -611,7 +612,6 @@
       `<section class="ask left"><h2 class="ask-h">Por onde começamos?</h2><div data-ai="c"></div></section>`;
   };
 
-  VIEWS["c/andamento"] = () => hero("Andamento", "Como está a implantação.", `${entrega()}% entregue.`, "Marque aqui o que a sua equipe já fez. O que é da Aprova, a gente atualiza.") + fasesHTML();
 
   VIEWS["c/validacoes"] = () => `<section class="big-h"><p class="eyebrow"><span class="dot-c"></span>Validações</p><h2>Assista, aprove, pronto.<span>Sem precisar de reunião.</span></h2><p class="lead">Cada vídeo mostra só o que mudou no formulário. Se algo estiver errado, fale com o ai.aprova ali mesmo.</p></section>` + validacoesHTML();
 
