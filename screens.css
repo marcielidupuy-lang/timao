@@ -419,3 +419,57 @@ button.kpi:hover .go { color: var(--ink); transform: translateX(2px); }
 }
 .role button.btn { background: var(--ink); color: #fff; padding: 6px 12px; font-size: 12.5px; border-radius: 9px; font-weight: 500; }
 .role button.btn.ghost { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+
+/* visão geral dividida: painel à esquerda, conversa à direita */
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+.split-l .kpis { grid-template-columns: repeat(2, 1fr); }
+.split-l .reu-grid { grid-template-columns: minmax(0, 1fr); }
+.split-r { position: sticky; top: 76px; }
+.chat-card { border: 1px solid var(--line); border-radius: 16px; background: #fff; padding: 20px; min-height: calc(100vh - 110px); display: flex; flex-direction: column; }
+.chat-card .ask-h { text-align: left; font-size: 18px; margin-bottom: 14px; }
+.chat-card .ai { flex: 1; display: flex; flex-direction: column; }
+.chat-card .ai-log { flex: 1; max-height: calc(100vh - 380px); display: flex; }
+.chat-card .ai-log:empty { flex: 1; }
+
+/* execuções do agente com seleção */
+.exec-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line-2); }
+.exec-list { list-style: none; margin: 0; padding: 0; }
+.exec-list li { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-top: 1px solid var(--line-2); }
+.exec-list li:first-child { border-top: 0; }
+.exec-list li.running { background: var(--cyan-soft); margin: 0 -18px; padding: 11px 18px; }
+.exec-st { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--cyan-d); }
+.ck { position: relative; width: 20px; height: 20px; flex: none; cursor: pointer; }
+.ck input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.ck span { position: absolute; inset: 0; border: 1.5px solid #c4c4cc; border-radius: 6px; background: #fff; }
+.ck input:checked + span { background: var(--ink); border-color: var(--ink); }
+.ck input:checked + span::after { content: ""; position: absolute; left: 6px; top: 2px; width: 5px; height: 10px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.ck input:focus-visible + span { box-shadow: 0 0 0 3px var(--cyan-soft); }
+
+/* editor do painel do cliente como lateral */
+.edside { position: fixed; top: 0; right: 0; bottom: 0; width: 360px; background: #fff; border-left: 1px solid var(--line); box-shadow: -12px 0 32px rgba(24,24,27,.06); z-index: 40; overflow-y: auto; padding: 20px 20px 32px; }
+body.editing .app { margin-right: 360px; }
+.ed-h { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.ed-h h3 { font-size: 18px; font-weight: 700; letter-spacing: -.3px; }
+.ed-sec { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line-2); }
+.ed-sec h4 { font-size: 11px; font-weight: 600; letter-spacing: .7px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.edside .btn.eye { min-width: 0; }
+.dr-redo .hint { font-size: 11.5px; }
+
+/* agenda do implantador: tarefas da Aprova e do agente */
+.ev.aprova { border-color: var(--ink); background: #f4f4f5; color: var(--ink-2); }
+.cal-leg .aprova::before, .ag-dot.aprova { background: var(--ink-2); }
+
+@media (max-width: 1100px) {
+  .split { grid-template-columns: minmax(0, 1fr); }
+  .split-r { position: static; }
+  .chat-card { min-height: 0; }
+  .chat-card .ai-log { max-height: 320px; }
+}
+@media (max-width: 860px) {
+  .edside { position: static; width: auto; border-left: 0; border-top: 1px solid var(--line); box-shadow: none; }
+  body.editing .app { margin-right: 0; }
+}
+.split-l .qitem { flex-wrap: wrap; }
+.split-l .qa { width: 100%; padding-left: 48px; }
+.chat-card .sug { flex-wrap: wrap; gap: 2px 12px; }
+.chat-card .sug span { flex-basis: 100%; padding-left: 31px; }

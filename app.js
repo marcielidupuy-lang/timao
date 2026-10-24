@@ -147,10 +147,10 @@
     i: [
       { id: "carteira", nome: "Minha carteira", ic: "layers", geral: true },
       { id: "visao", nome: "Visão geral", ic: "home" },
-      { id: "painel", nome: "Painel do cliente", ic: "eye" },
       { id: "fila", nome: "Minha fila", ic: "clipboard", badge: () => ajustes().length + minhas().length + semResposta().length },
       { id: "fases", nome: "Fases e tarefas", ic: "form" },
       { id: "reunioes", nome: "Reuniões", ic: "meet" },
+      { id: "agenda", nome: "Agenda", ic: "cal" },
       { id: "validacoes", nome: "Validações", ic: "video", badge: () => ajustes().length },
       { id: "usuarios", nome: "Usuários", ic: "users" },
       { id: "agente", nome: "Agente", ic: "bolt" }
@@ -182,8 +182,8 @@
     $("#railIcons").innerHTML = rail.map((k) => `<span class="rail-btn ${k === "form" ? "on" : ""}">${I[k]}</span>`).join("");
     $("#railBell").innerHTML = I.bell;
     $(".role").innerHTML = ROLE === "i"
-      ? `<a class="btn sm ghost" href="#/i/painel">${I.pencil}Editar painel do cliente</a><button class="btn sm" data-preview="1">${I.ext}Abrir painel do cliente</button>`
-      : preview() ? `<span class="prev-tag">${I.eye}Você está vendo o painel da prefeitura</span><button class="btn sm ghost" data-back="1">Voltar ao implantador</button>` : "";
+      ? `<button class="btn sm" data-preview="1">${I.pencil}Abrir e editar painel do cliente</button>`
+      : preview() ? `<span class="prev-tag">${I.pencil}Editando o painel da prefeitura</span><button class="btn sm ghost" data-back="1">Voltar ao implantador</button>` : "";
     $("#avatar").textContent = ROLE === "i" ? "MD" : "AR";
     const c = S.cliente;
     $("#who").innerHTML = ROLE === "i"
@@ -568,17 +568,18 @@
     const fila = filaItems().slice(0, 4);
     const prox = proxReunioes();
     return hero(`${ativa() ? ativa().nome + " em andamento" : "Implantação"}`, `${esc(c.nome)}.`, "Implantação da prefeitura toda.", `${c.secretarias} secretarias · ${c.processos} processos · champion ${esc(c.champion)} · Pylon ${esc(c.pylon)}`) +
-      kpisHTML("i") +
-      `<section class="ask"><h2 class="ask-h">O que o agente faz por você agora?</h2><div data-ai="i"></div></section>
-      <div class="grid">
-        <div class="col-main">
-          ${secTitle("Sua fila", `${filaItems().length} itens`, `<a class="more" href="#/i/fila">Ver tudo ${I.right}</a>`)}
-          <div class="queue">${fila.map(filaItemHTML).join("") || `<p class="empty">Nada na sua fila 🎉</p>`}</div>
-          <div class="block-sm">${secTitle("Próximas reuniões", "", `<a class="more" href="#/i/reunioes">Ver todas ${I.right}</a>`)}<div class="reu-grid">${prox.slice(0, 2).map((r) => reuniaoHTML(r, false)).join("")}</div></div>
+      `<div class="split">
+        <div class="split-l">
+          ${kpisHTML("i")}
+          <div class="block-sm">${secTitle("Sua fila", `${filaItems().length} itens`, `<a class="more" href="#/i/fila">Ver tudo ${I.right}</a>`)}
+          <div class="queue">${fila.map(filaItemHTML).join("") || `<p class="empty">Nada na sua fila 🎉</p>`}</div></div>
+          <div class="block-sm">${secTitle("Próximas reuniões", "", `<a class="more" href="#/i/agenda">Agenda ${I.right}</a>`)}<div class="reu-grid">${prox.slice(0, 2).map((r) => reuniaoHTML(r, false)).join("")}</div></div>
+          <div class="block-sm"><section class="card"><div class="card-h"><h3>Agente em ação</h3><span class="live"><span class="dot"></span>ao vivo</span></div>${feedHTML(5)}<a class="more" href="#/i/agente">Execuções do agente ${I.right}</a></section></div>
         </div>
-        <aside class="col-side"><section class="card"><div class="card-h"><h3>Agente em ação</h3><span class="live"><span class="dot"></span>ao vivo</span></div>${feedHTML(6)}<a class="more" href="#/i/agente">Ver o que o agente fez ${I.right}</a></section></aside>
+        <aside class="split-r"><section class="chat-card"><h2 class="ask-h">O que o agente faz por você agora?</h2><div data-ai="i"></div></section></aside>
       </div>`;
   };
+
 
   function filaItems() {
     return [
@@ -606,10 +607,10 @@
     return hero("Minha fila", "O que é seu.", "O resto o agente resolve.", "Ajustes pedidos pela prefeitura, cobranças que precisam de você e tarefas da Aprova.") +
       grp("Ajustes pedidos pela prefeitura", "viram vídeo novo para validar", a.map((v) => ({ tipo: "ajuste", v }))) +
       grp("Prefeitura atrasada", "o agente já mandou FUP; depois de 2 sem resposta, é com você", s.map((t) => ({ tipo: "cobrar", t }))) +
-      `<div class="block-sm">${secTitle("Tarefas da Aprova e do agente", "", autoBtn())}<div class="queue">${m.map((t) => filaItemHTML({ tipo: "tarefa", t })).join("") || `<p class="empty">Nada aqui.</p>`}</div></div>`;
+      `<div class="block-sm">${secTitle("Tarefas da Aprova e do agente", "", `<a class="more" href="#/i/agente">Automode ${I.right}</a>`)}<div class="queue">${m.map((t) => filaItemHTML({ tipo: "tarefa", t })).join("") || `<p class="empty">Nada aqui.</p>`}</div></div>`;
   };
 
-  VIEWS["i/fases"] = () => hero("Fases e tarefas", "Fases da implantação.", "Tudo que está previsto.", "Você conclui o que é da Aprova. O que é da prefeitura, ela marca no painel dela.") + `<div class="sec-title"><span class="hint">Clique na seta → de uma tarefa do agente pra ele executar, ou ligue o Automode.</span>${autoBtn()}</div>` + fasesHTML();
+  VIEWS["i/fases"] = () => hero("Fases e tarefas", "Fases da implantação.", "Tudo que está previsto.", "Você conclui o que é da Aprova. O que é da prefeitura, ela marca no painel dela.") + `<div class="sec-title"><span class="hint">Clique na seta → de uma tarefa do agente pra ele executar. Pra várias de uma vez, use o Automode em <a href="#/i/agente">Agente</a>.</span></div>` + fasesHTML();
 
   VIEWS["i/reunioes"] = () => {
     const ag = proxReunioes(), re = S.reunioes.filter((r) => r.status === "realizada").sort((a, b) => d(b.data) - d(a.data));
@@ -626,12 +627,28 @@
   VIEWS["i/agente"] = () => {
     const cont = {};
     S.atividade.forEach((a) => { const g = (GATILHO[a.gatilho] || GATILHO.painel).instr; cont[g] = (cont[g] || 0) + 1; });
-    return hero("Agente", "O que o agente fez.", "E qual instrução ele seguiu.", "Cada ação mostra o gatilho e a instrução da pasta INSTRUCTIONS.") +
-      `<div class="grid"><div class="col-main"><section class="card">${feedHTML(50)}</section></div>
+    const pend = pendAgente();
+    // Por padrão vêm marcadas as da fase ativa; as das próximas fases ficam desmarcadas.
+    if (!SEL) SEL = new Set(pend.filter((t) => t.fase.status === "ativa").map((t) => t.id));
+    const nSel = pend.filter((t) => SEL.has(t.id)).length;
+    return hero("Agente", "Execuções do agente.", "Selecione e ligue o Automode.", "O agente executa as marcadas, uma atrás da outra, seguindo as instruções da pasta INSTRUCTIONS.") +
+      `<div class="grid"><div class="col-main">
+        <section class="card exec">
+          <div class="card-h"><h3>Para o agente executar</h3><span class="hint">${nSel} de ${pend.length} selecionada${nSel === 1 ? "" : "s"}</span></div>
+          <div class="exec-bar"><button class="link" data-selall="${nSel === pend.length ? "0" : "1"}">${nSel === pend.length ? "Desmarcar todas" : "Marcar todas"}</button>${autoBtn()}</div>
+          <ul class="exec-list">${pend.map((t) => `<li class="${t.id === CUR ? "running" : ""}">
+            <label class="ck"><input type="checkbox" data-sel="${t.id}" ${SEL.has(t.id) ? "checked" : ""} ${AUTO ? "disabled" : ""}><span></span></label>
+            <div class="qt"><b>${esc(t.titulo)}</b><span>${esc(t.fase.nome)} · ${dia(t.data)} ${hora(t.data)}${t.ticket ? " · " + esc(t.ticket) : ""} · ${plano(t).instr}</span></div>
+            ${t.id === CUR ? `<span class="exec-st"><span class="pulse"></span>executando</span>` : `<button class="run" data-run="${t.id}" title="Executar só esta" aria-label="Executar só esta">${I.right}</button>`}
+          </li>`).join("") || `<li class="empty">Nenhuma execução pendente 🎉</li>`}</ul>
+        </section>
+        <div class="block-sm"><section class="card"><div class="card-h"><h3>O que o agente já fez</h3></div>${feedHTML(30)}</section></div>
+      </div>
         <aside class="col-side"><section class="card"><div class="card-h"><h3>Instruções</h3><span class="hint">ações nesta implantação</span></div>
           <ul class="instr">${INSTR.map(([k, desc]) => `<li><a href="${REPO}${k}.md" target="_blank" rel="noopener"><b>${k}</b><span>${desc}</span></a><span class="n">${cont[k] || "–"}</span></li>`).join("")}</ul>
         </section></aside></div>`;
   };
+
 
   // ---------- telas da prefeitura ----------
   // Início da prefeitura: saudação curta, os 4 cards (cada um abre o detalhe) e os atalhos do ai.aprova.
@@ -648,38 +665,33 @@
       (links ? `<div class="block-sm">${links}</div>` : "");
   };
 
-  VIEWS["i/painel"] = () => {
+  function editorHTML() {
     const p = PN();
     const sw = (on) => `<span class="sw ${on ? "on" : ""}"><i></i></span>`;
     const tarefas = S.fases.flatMap((f) => f.tasks.map((t) => ({ t, f })));
-    return hero("Painel do cliente", "Painel da prefeitura.", "Você decide o que aparece.", "O painel do cliente é separado do seu. Ligue e desligue blocos, publique avisos e links e esconda o que a prefeitura não precisa ver.") +
-      `<div class="sec-title"><span class="hint">${BLOCOS.filter(([k]) => p.blocos[k]).length} de ${BLOCOS.length} blocos ligados · ${p.avisos.length} aviso${p.avisos.length === 1 ? "" : "s"} · ${p.ocultas.length} tarefa${p.ocultas.length === 1 ? "" : "s"} escondida${p.ocultas.length === 1 ? "" : "s"}</span><button class="btn sm" data-preview="1">${I.ext}Abrir painel do cliente</button></div>
-      <div class="grid"><div class="col-main">
-        <section class="card"><div class="card-h"><h3>O que aparece</h3><span class="hint">blocos e telas do painel da prefeitura</span></div>
-          <ul class="ed-list">${BLOCOS.map(([k, nome, desc]) => `<li><div class="qt"><b>${nome}</b><span>${desc}</span></div><button class="sw-btn" data-bloco="${k}" aria-pressed="${!!p.blocos[k]}" aria-label="${p.blocos[k] ? "Esconder" : "Mostrar"} ${nome}">${sw(p.blocos[k])}</button></li>`).join("")}</ul>
-        </section>
-        <section class="card"><div class="card-h"><h3>Tarefas que a prefeitura vê</h3><span class="hint">esconda as internas</span></div>
-          <ul class="ed-list">${tarefas.map(({ t, f }) => { const on = visivel(t); return `<li class="${on ? "" : "off"}"><div class="qt"><b>${esc(t.titulo)}</b><span>${esc(f.nome)} · ${DONO.i[t.dono]}</span></div><button class="btn sm ghost eye" data-ocultar="${t.id}">${on ? I.eye + "Visível" : I.eyeoff + "Escondida"}</button></li>`; }).join("")}</ul>
-        </section>
-      </div>
-      <aside class="col-side">
-        <section class="card"><div class="card-h"><h3>Avisos</h3><span class="hint">aparecem no topo do Início</span></div>
-          <ul class="ed-items">${p.avisos.map((a) => `<li><div class="qt"><b>${esc(a.titulo)}</b><span>${esc(a.texto)}</span></div><button class="dr-x" data-delaviso="${a.id}" aria-label="Remover aviso">${I.trash}</button></li>`).join("") || `<li class="empty">Nenhum aviso.</li>`}</ul>
-          <form class="ed-form" data-add="aviso"><input name="titulo" placeholder="Título do aviso" required><textarea name="texto" rows="2" placeholder="Texto curto pra prefeitura" required></textarea><button class="btn sm" type="submit">${I.plus}Adicionar aviso</button></form>
-        </section>
-        <section class="card"><div class="card-h"><h3>Links e documentos</h3></div>
-          <ul class="ed-items">${p.links.map((l) => `<li><div class="qt"><b>${esc(l.titulo)}</b><span>${esc(l.url)}</span></div><button class="dr-x" data-dellink="${l.id}" aria-label="Remover link">${I.trash}</button></li>`).join("") || `<li class="empty">Nenhum link.</li>`}</ul>
-          <form class="ed-form" data-add="link"><input name="titulo" placeholder="Nome (ex.: Lei do Alvará)" required><input name="url" type="url" placeholder="https://…" required><button class="btn sm" type="submit">${I.plus}Adicionar link</button></form>
-        </section>
-      </aside></div>`;
-  };
+    return `<div class="ed-h"><div><span class="who-k">Painel da prefeitura</span><h3>Editar o que aparece</h3></div><button class="btn sm ghost" data-back="1">Concluir</button></div>
+      <p class="hint">Cada mudança aparece na hora, aqui do lado.</p>
+      <section class="ed-sec"><h4>Blocos e telas</h4>
+        <ul class="ed-list">${BLOCOS.map(([k, nome, desc]) => `<li><div class="qt"><b>${nome}</b><span>${desc}</span></div><button class="sw-btn" data-bloco="${k}" aria-pressed="${!!p.blocos[k]}" aria-label="${p.blocos[k] ? "Esconder" : "Mostrar"} ${nome}">${sw(p.blocos[k])}</button></li>`).join("")}</ul></section>
+      <section class="ed-sec"><h4>Avisos</h4>
+        <ul class="ed-items">${p.avisos.map((a) => `<li><div class="qt"><b>${esc(a.titulo)}</b><span>${esc(a.texto)}</span></div><button class="dr-x" data-delaviso="${a.id}" aria-label="Remover aviso">${I.trash}</button></li>`).join("") || `<li class="empty">Nenhum aviso.</li>`}</ul>
+        <form class="ed-form" data-add="aviso"><input name="titulo" placeholder="Título do aviso" required><textarea name="texto" rows="2" placeholder="Texto curto pra prefeitura" required></textarea><button class="btn sm" type="submit">${I.plus}Adicionar aviso</button></form></section>
+      <section class="ed-sec"><h4>Links e documentos</h4>
+        <ul class="ed-items">${p.links.map((l) => `<li><div class="qt"><b>${esc(l.titulo)}</b><span>${esc(l.url)}</span></div><button class="dr-x" data-dellink="${l.id}" aria-label="Remover link">${I.trash}</button></li>`).join("") || `<li class="empty">Nenhum link.</li>`}</ul>
+        <form class="ed-form" data-add="link"><input name="titulo" placeholder="Nome (ex.: Lei do Alvará)" required><input name="url" type="url" placeholder="https://…" required><button class="btn sm" type="submit">${I.plus}Adicionar link</button></form></section>
+      <section class="ed-sec"><h4>Tarefas que a prefeitura vê</h4>
+        <ul class="ed-list">${tarefas.map(({ t, f }) => { const on = visivel(t); return `<li class="${on ? "" : "off"}"><div class="qt"><b>${esc(t.titulo)}</b><span>${esc(f.nome)} · ${DONO.i[t.dono]}</span></div><button class="btn sm ghost eye" data-ocultar="${t.id}">${on ? I.eye + "Visível" : I.eyeoff + "Escondida"}</button></li>`; }).join("")}</ul></section>`;
+  }
+
 
 
   VIEWS["c/validacoes"] = () => `<section class="big-h"><p class="eyebrow"><span class="dot-c"></span>Validações</p><h2>Assista, aprove, pronto.<span>Sem precisar de reunião.</span></h2><p class="lead">Cada vídeo mostra só o que mudou no formulário. Se algo estiver errado, fale com o ai.aprova ali mesmo.</p></section>` + validacoesHTML();
 
   // ---------- agenda da prefeitura (calendário) ----------
   // Tudo que tem data no sistema: entregas do contrato, reuniões, prazos da equipe e o go-live.
-  const TIPOS = { late: "Atrasado", tarefa: "Sua equipe", reuniao: "Reunião", entrega: "Entrega do contrato", golive: "Go-live" };
+  const TIPOS = { late: "Atrasado", tarefa: "Sua equipe", aprova: "Aprova e agente", reuniao: "Reunião", entrega: "Entrega do contrato", golive: "Go-live" };
+  // Pro implantador as tarefas da prefeitura se chamam "Prefeitura" e entram também as da Aprova e do agente.
+  const tipoNome = (k) => (ROLE === "i" && k === "tarefa" ? "Prefeitura" : TIPOS[k]);
   const ymd = (x) => { const p = (n) => String(n).padStart(2, "0"); return `${x.getFullYear()}-${p(x.getMonth() + 1)}-${p(x.getDate())}`; };
   let CAL = null;
   function eventosAgenda() {
@@ -689,12 +701,12 @@
       const late = x.status !== "entregue" && d(x.prazo + "T23:59") < now();
       ev.push({ iso: x.prazo + "T09:00", tipo: /^go-live/i.test(x.t) ? "golive" : "entrega", t: x.t, s: x.status === "entregue" ? "entregue" : late ? "atrasada" : x.d, feito: x.status === "entregue", late });
     });
-    allTasks().filter((t) => t.dono === "prefeitura" && visivel(t)).forEach((t) =>
-      ev.push({ iso: t.data, tipo: "tarefa", t: t.titulo, s: t.feito ? "feito" : isLate(t) ? `atrasada desde ${dia(t.data)}` : `até ${hora(t.data)}`, feito: t.feito, late: isLate(t) }));
+    allTasks().filter((t) => ROLE === "i" || (t.dono === "prefeitura" && visivel(t))).forEach((t) =>
+      ev.push({ iso: t.data, tipo: t.dono === "prefeitura" ? "tarefa" : "aprova", t: t.titulo, s: t.feito ? "feito" : isLate(t) ? `atrasada desde ${dia(t.data)}` : `até ${hora(t.data)}`, feito: t.feito, late: isLate(t) }));
     return ev.sort((a, b) => d(a.iso) - d(b.iso));
   }
   const evClasse = (e) => `${e.late ? "late" : e.tipo}${e.feito ? " feito" : ""}`;
-  const evLinha = (e, comDia) => `<li><span class="ag-dot ${evClasse(e)}"></span><span class="ag-t"><b>${esc(e.t)}</b><small>${comDia ? `${diaSem(e.iso)} · ` : ""}${esc(e.s)}</small></span><span class="ag-k ${evClasse(e)}">${e.late ? "atrasado" : e.feito ? "feito" : TIPOS[e.tipo]}</span></li>`;
+  const evLinha = (e, comDia) => `<li><span class="ag-dot ${evClasse(e)}"></span><span class="ag-t"><b>${esc(e.t)}</b><small>${comDia ? `${diaSem(e.iso)} · ` : ""}${esc(e.s)}</small></span><span class="ag-k ${evClasse(e)}">${e.late ? "atrasado" : e.feito ? "feito" : tipoNome(e.tipo)}</span></li>`;
 
   VIEWS["c/agenda"] = () => {
     if (!CAL) { const n = now(); CAL = { y: n.getFullYear(), m: n.getMonth(), sel: ymd(n) }; }
@@ -715,7 +727,7 @@
         <div class="cal-h"><h2>${first.toLocaleDateString("pt-BR", { month: "long", year: "numeric" }).replace(/^./, (l) => l.toUpperCase())}</h2>
           <button class="btn sm ghost" data-calmes="-1" aria-label="Mês anterior">‹</button><button class="btn sm ghost" data-calhoje="1">Hoje</button><button class="btn sm ghost" data-calmes="1" aria-label="Próximo mês">›</button></div>
         <div class="cal"><div class="cal-w">${["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((w) => `<span>${w}</span>`).join("")}</div><div class="cal-g">${cel}</div></div>
-        <div class="cal-leg">${Object.entries(TIPOS).map(([k, l]) => `<span class="${k}">${l}</span>`).join("")}</div>
+        <div class="cal-leg">${Object.keys(TIPOS).filter((k) => ROLE === "i" || k !== "aprova").map((k) => `<span class="${k}">${tipoNome(k)}</span>`).join("")}</div>
       </div>
       <aside class="col-side">
         <section class="card"><div class="card-h"><h3>${diaSem(CAL.sel + "T12:00")}</h3></div>
@@ -726,6 +738,8 @@
       </aside></div>`;
   };
 
+  VIEWS["i/agenda"] = () => VIEWS["c/agenda"]();
+
   VIEWS["c/equipe"] = () => hero("Minha equipe", "Quem usa o sistema.", "Convide pelo WhatsApp.", "Mande o link, a pessoa preenche os dados e a Aprova libera o acesso.") +
     `<div class="sec-title"><span></span><button class="btn sm" data-convidar="1">${I.whatsapp}Convidar alguém</button></div>` + usuariosHTML();
 
@@ -733,6 +747,16 @@
   function render() {
     renderShell();
     $("#view").innerHTML = VIEWS[`${ROLE}/${PAGE}`]();
+    // Implantador dentro do painel da prefeitura: o editor fica numa lateral à direita.
+    let ed = $("#edside");
+    const editando = ROLE === "c" && preview();
+    document.body.classList.toggle("editing", editando);
+    if (editando) {
+      if (!ed) { ed = document.createElement("aside"); ed.id = "edside"; ed.className = "edside"; ed.setAttribute("aria-label", "Editar painel do cliente"); document.body.appendChild(ed); }
+      const y = ed.scrollTop;
+      ed.innerHTML = editorHTML();
+      ed.scrollTop = y;
+    } else if (ed) ed.remove();
     document.querySelectorAll("[data-ai]").forEach((el) => el.appendChild(aiBox(el.dataset.ai === "i" ? {
       placeholder: "Peça ao agente: resumo pro secretário, cobrar pendências, montar pauta…",
       sugs: [
@@ -1162,8 +1186,12 @@
       </div>
       <p class="hint">O agente já aplicou a alteração no formulário em homologação. Confira antes de o vídeo ir pra prefeitura.</p>
       <div class="dr-btns"><button class="btn" data-criarvideo="${v.id}">${I.video}Criar vídeo novo</button><button class="btn ghost" data-outraalt="1">Pedir outra alteração</button></div>
-      <form class="dr-redo" hidden><textarea rows="3" placeholder="Explique pro agente o que mudar. Ex.: a vistoria é do engenheiro, não do fiscal"></textarea><button class="btn sm" type="submit">Refazer alteração</button></form>
+      <form class="dr-redo" hidden><textarea rows="3" placeholder="Explique pro agente o que mudar e aperte Enter. Ex.: a vistoria é do engenheiro, não do fiscal"></textarea><span class="hint">Enter refaz a alteração · Shift+Enter quebra a linha</span><button class="btn sm" type="submit">Refazer alteração</button></form>
       <ol class="steps"></ol><div class="dr-out"></div>`;
+    // Enter refaz a alteração; Shift+Enter quebra a linha.
+    $(".dr-redo textarea", dr).addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $(".dr-redo", dr).requestSubmit(); }
+    });
     $(".dr-redo", dr).addEventListener("submit", (e) => {
       e.preventDefault();
       const txt = $(".dr-redo textarea", dr).value.trim();
@@ -1202,10 +1230,12 @@
     step();
   }
   // Automode: o agente executa sozinho, em sequência, todas as tarefas dele na fase ativa.
-  let AUTO = false;
+  let AUTO = false, SEL = null, CUR = null;
+  const pendAgente = () => allTasks().filter((t) => t.dono === "agente" && !t.feito).sort((a, b) => d(a.data) - d(b.data));
   function startAuto() {
-    const fila = minhas().filter((t) => t.dono === "agente").sort((a, b) => d(a.data) - d(b.data)).map((t) => t.id);
-    if (!fila.length) { toast("Nenhuma tarefa do agente pendente."); return; }
+    const marcadas = SEL ? pendAgente().filter((t) => SEL.has(t.id)) : minhas().filter((t) => t.dono === "agente");
+    const fila = marcadas.sort((a, b) => d(a.data) - d(b.data)).map((t) => t.id);
+    if (!fila.length) { toast(SEL ? "Selecione pelo menos uma execução." : "Nenhuma tarefa do agente pendente."); return; }
     AUTO = true;
     log("manual", `Automode ligado: o agente vai executar ${fila.length} tarefas sozinho`);
     save(); refresh();
@@ -1213,19 +1243,21 @@
     const next = () => {
       if (!AUTO) return;
       if (i >= fila.length) {
-        AUTO = false;
+        AUTO = false; CUR = null;
         log("manual", `Automode concluiu ${fila.length} tarefas`);
         save(); refresh();
         toast(`Automode: o agente concluiu ${fila.length} tarefas.`);
         return;
       }
       const id = fila[i++];
+      CUR = id;
+      refresh();
       runAgent(id, next, { i, n: fila.length });
     };
     next();
   }
   function stopAuto() {
-    AUTO = false;
+    AUTO = false; CUR = null;
     clearTimeout(runT);
     refresh();
     toast("Automode desligado. O agente parou.");
@@ -1266,7 +1298,7 @@
       go("c", "inicio");
       return;
     }
-    if (el("[data-back]")) { go("i", "painel"); return; }
+    if (el("[data-back]")) { try { sessionStorage.removeItem("timao-prev"); } catch (er) {} go("i", "visao"); return; }
     const editou = (msg) => { log("painel", msg); save(); toast("Painel do cliente atualizado."); refresh(); };
     if ((x = el("[data-bloco]"))) {
       const k = x.dataset.bloco, nome = BLOCOS.find((b) => b[0] === k)[1];
@@ -1314,6 +1346,16 @@
       return;
     }
     if ((x = el("[data-run]"))) { runAgent(x.dataset.run); return; }
+    if ((x = el("[data-sel]"))) {
+      SEL[x.checked ? "add" : "delete"](x.dataset.sel);
+      refresh();
+      return;
+    }
+    if ((x = el("[data-selall]"))) {
+      SEL = new Set(x.dataset.selall === "1" ? pendAgente().map((t) => t.id) : []);
+      refresh();
+      return;
+    }
     if (el("[data-auto]")) { AUTO ? stopAuto() : startAuto(); return; }
     if (el("[data-drclose]")) { closeDrawer(); return; }
     if ((x = el("[data-task]"))) {
