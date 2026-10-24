@@ -4,7 +4,24 @@
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
   // ---------- estado (DATA + o que mudou na demo) ----------
+  // O painel da prefeitura é separado do painel do implantador: só mostra o que a implantadora publicou.
+  const PAINEL_PADRAO = {
+    blocos: { indicadores: true, parafazer: true, ai: true, reuniao: true, andamento: true, validacoes: true, reunioes: true, equipe: true },
+    avisos: [{ id: "a1", titulo: "Go-live da Secretaria de Obras", texto: "Os processos de Obras entram no ar em 04/11. Até lá, os analistas usam o sistema em homologação." }],
+    links: [{ id: "l1", titulo: "Manual do analista (PDF)", url: "https://aprova.com.br" }],
+    ocultas: []
+  };
+  const BLOCOS = [
+    ["indicadores", "Indicadores", "Entrega, o que está com a prefeitura, go-live e agenda"],
+    ["ai", "ai.aprova", "Campo de conversa e atalhos do agente no Início"],
+    ["validacoes", "Validações", "Vídeos para aprovar"],
+    ["reunioes", "Reuniões", "Tela com todas as reuniões"],
+    ["equipe", "Minha equipe", "Usuários e convite pelo WhatsApp"]
+  ];
   let S = load();
+  const PN = () => S.painel || (S.painel = JSON.parse(JSON.stringify(PAINEL_PADRAO)));
+  const visivel = (t) => !PN().ocultas.includes(t.id);
+  const preview = () => { try { return sessionStorage.getItem("timao-prev") === "1"; } catch (e) { return false; } };
   function load() {
     try {
       const saved = localStorage.getItem(KEY);
@@ -49,6 +66,13 @@
     bell: sv('<path d="M6 16V11a6 6 0 0112 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 004 0"/>'),
     form: sv('<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>'),
     layers: sv('<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/>'),
+    eye: sv('<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'),
+    eyeoff: sv('<path d="M3 3l18 18"/><path d="M10.6 5.1A10 10 0 0112 5c6.5 0 10 7 10 7a17 17 0 01-3.2 4.1M6.6 6.6A17 17 0 002 12s3.5 7 10 7a9.8 9.8 0 005.4-1.6"/>'),
+    pencil: sv('<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>'),
+    ext: sv('<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"/>'),
+    trash: sv('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'),
+    megaphone: sv('<path d="M4 10v4h3l7 4V6L7 10z"/><path d="M18 9a4 4 0 010 6"/>'),
+    link: sv('<path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/>'),
     upload: sv('<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/>'),
     sparkle: sv('<path d="M12 4v4M12 16v4M4 12h4M16 12h4M7 7l2 2M15 15l2 2M7 17l2-2M15 9l2-2"/>'),
     logo: '<svg viewBox="0 0 40 40" class="sc-logo"><path d="M10 33L20 8l10 25" stroke="#111" stroke-width="3.4" fill="none"/><path d="M2 22h36" stroke="#14c3d6" stroke-width="3.2"/></svg>',
@@ -123,6 +147,7 @@
     i: [
       { id: "carteira", nome: "Minha carteira", ic: "layers", geral: true },
       { id: "visao", nome: "Visão geral", ic: "home" },
+      { id: "painel", nome: "Painel do cliente", ic: "eye" },
       { id: "fila", nome: "Minha fila", ic: "clipboard", badge: () => ajustes().length + minhas().length + semResposta().length },
       { id: "fases", nome: "Fases e tarefas", ic: "form" },
       { id: "reunioes", nome: "Reuniões", ic: "meet" },
@@ -131,18 +156,19 @@
       { id: "agente", nome: "Agente", ic: "bolt" }
     ],
     c: [
-      { id: "inicio", nome: "Início", ic: "home", badge: () => doCliente().length + vidsPend().length },
-      { id: "validacoes", nome: "Validações", ic: "video", badge: () => vidsPend().length },
-      { id: "reunioes", nome: "Reuniões", ic: "meet" },
-      { id: "equipe", nome: "Minha equipe", ic: "users" }
+      { id: "inicio", nome: "Início", ic: "home", badge: () => doCliente().filter(visivel).length + (PN().blocos.validacoes ? vidsPend().length : 0) },
+      { id: "validacoes", nome: "Validações", ic: "video", badge: () => vidsPend().length, bloco: "validacoes" },
+      { id: "reunioes", nome: "Reuniões", ic: "meet", bloco: "reunioes" },
+      { id: "equipe", nome: "Minha equipe", ic: "users", bloco: "equipe" }
     ]
   };
+  const rotas = (role) => ROUTES[role].filter((r) => !r.bloco || PN().blocos[r.bloco]);
   let ROLE = "i", PAGE = "carteira";
   function parseHash() {
     const m = location.hash.match(/^#\/(i|c)\/([a-z]+)/);
-    if (m && ROUTES[m[1]].some((r) => r.id === m[2])) { ROLE = m[1]; PAGE = m[2]; return; }
-    // Tela que não existe mais (ex.: #/c/andamento): fica na mesma visão, na primeira tela.
-    if (m) { ROLE = m[1]; PAGE = ROUTES[ROLE][0].id; return; }
+    if (m && rotas(m[1]).some((r) => r.id === m[2])) { ROLE = m[1]; PAGE = m[2]; return; }
+    // Tela que não existe mais ou que a implantadora desligou: fica na mesma visão, na primeira tela.
+    if (m) { ROLE = m[1]; PAGE = rotas(m[1])[0].id; return; }
     let r = "i";
     try { r = localStorage.getItem("timao-role") || "i"; } catch (e) {}
     ROLE = r === "c" ? "c" : "i";
@@ -155,13 +181,15 @@
     const rail = ["chat", "docok", "users", "money", "form", "clipboard", "building", "chart"];
     $("#railIcons").innerHTML = rail.map((k) => `<span class="rail-btn ${k === "form" ? "on" : ""}">${I[k]}</span>`).join("");
     $("#railBell").innerHTML = I.bell;
-    document.querySelectorAll(".role button").forEach((b) => b.setAttribute("aria-selected", b.dataset.role === ROLE));
+    $(".role").innerHTML = ROLE === "i"
+      ? `<a class="btn sm ghost" href="#/i/painel">${I.pencil}Editar painel do cliente</a><button class="btn sm" data-preview="1">${I.ext}Abrir painel do cliente</button>`
+      : preview() ? `<span class="prev-tag">${I.eye}Você está vendo o painel da prefeitura</span><button class="btn sm ghost" data-back="1">Voltar ao implantador</button>` : "";
     $("#avatar").textContent = ROLE === "i" ? "MD" : "AR";
     const c = S.cliente;
     $("#who").innerHTML = ROLE === "i"
       ? `<span class="who-k">Implantadora</span><b>${esc(c.implantador)}</b>`
       : `<span class="who-k">${esc(c.nome)}</span><b>${esc(c.champion)}</b>`;
-    const items = ROUTES[ROLE];
+    const items = rotas(ROLE);
     const link = (r) => {
       const n = r.badge ? r.badge() : 0;
       return `<a class="nav2-item ${r.id === PAGE ? "on" : ""}" href="#/${ROLE}/${r.id}"><span class="ni">${I[r.ic]}</span>${r.nome}${n ? `<span class="badge">${n}</span>` : ""}</a>`;
@@ -210,7 +238,7 @@
     const ST = { ativa: "Em andamento", futura: "Próxima", concluida: "Concluída" };
     return S.fases.map((f) => {
       const feitas = f.tasks.filter((t) => t.feito).length;
-      const tasks = [...f.tasks].sort((a, b) => (isLate(b) - isLate(a)) || (a.feito - b.feito) || (d(a.data) - d(b.data)));
+      const tasks = [...f.tasks].filter((t) => ROLE !== "c" || visivel(t)).sort((a, b) => (isLate(b) - isLate(a)) || (a.feito - b.feito) || (d(a.data) - d(b.data)));
       return `<section class="fase ${f.status}">
         <div class="fase-h"><h3>${esc(f.nome)}</h3><span class="fase-st">${ST[f.status]}</span><span class="count">${feitas}/${f.tasks.length}</span><span class="desc">${esc(f.descricao)}</span></div>
         <ul class="tasks">${tasks.map((t) => {
@@ -367,7 +395,7 @@
   function kpisHTML(lado) {
     const c = S.cliente;
     const pct = entrega();
-    const pend = doCliente().length + vidsPend().length;
+    const pend = lado === "c" ? doCliente().filter(visivel).length + (PN().blocos.validacoes ? vidsPend().length : 0) : doCliente().length + vidsPend().length;
     if (lado === "c") {
       // Na prefeitura não mostramos "reunião evitada"; no lugar entra a agenda.
       const prox = proxReunioes()[0];
@@ -606,10 +634,41 @@
   // Início da prefeitura: saudação curta, os 4 cards (cada um abre o detalhe) e os atalhos do ai.aprova.
   VIEWS["c/inicio"] = () => {
     const c = S.cliente;
-    const n = doCliente().length + vidsPend().length;
+    const B = PN().blocos;
+    const n = doCliente().filter(visivel).length + (B.validacoes ? vidsPend().length : 0);
+    const avisos = PN().avisos.map((a) => `<div class="aviso"><span class="qi cyan">${I.megaphone}</span><div class="qt"><b>${esc(a.titulo)}</b><span>${esc(a.texto)}</span></div></div>`).join("");
+    const links = PN().links.length ? `<section class="card"><div class="card-h"><h3>Links e documentos</h3></div><ul class="links">${PN().links.map((l) => `<li><a href="${esc(l.url)}" target="_blank" rel="noopener">${I.link}${esc(l.titulo)}</a></li>`).join("")}</ul></section>` : "";
     return `<section class="phead hello"><h1>Olá, ${esc(c.contato)}.<span>${n ? `${n} coisa${n > 1 ? "s" : ""} depende${n > 1 ? "m" : ""} de você.` : "Nada depende de você hoje."}</span></h1></section>` +
-      kpisHTML("c") +
-      `<section class="ask left"><h2 class="ask-h">Por onde começamos?</h2><div data-ai="c"></div></section>`;
+      (avisos ? `<div class="avisos">${avisos}</div>` : "") +
+      (B.indicadores ? kpisHTML("c") : "") +
+      (B.ai ? `<section class="ask left"><h2 class="ask-h">Por onde começamos?</h2><div data-ai="c"></div></section>` : "") +
+      (links ? `<div class="block-sm">${links}</div>` : "");
+  };
+
+  VIEWS["i/painel"] = () => {
+    const p = PN();
+    const sw = (on) => `<span class="sw ${on ? "on" : ""}"><i></i></span>`;
+    const tarefas = S.fases.flatMap((f) => f.tasks.map((t) => ({ t, f })));
+    return hero("Painel do cliente", "Painel da prefeitura.", "Você decide o que aparece.", "O painel do cliente é separado do seu. Ligue e desligue blocos, publique avisos e links e esconda o que a prefeitura não precisa ver.") +
+      `<div class="sec-title"><span class="hint">${BLOCOS.filter(([k]) => p.blocos[k]).length} de ${BLOCOS.length} blocos ligados · ${p.avisos.length} aviso${p.avisos.length === 1 ? "" : "s"} · ${p.ocultas.length} tarefa${p.ocultas.length === 1 ? "" : "s"} escondida${p.ocultas.length === 1 ? "" : "s"}</span><button class="btn sm" data-preview="1">${I.ext}Abrir painel do cliente</button></div>
+      <div class="grid"><div class="col-main">
+        <section class="card"><div class="card-h"><h3>O que aparece</h3><span class="hint">blocos e telas do painel da prefeitura</span></div>
+          <ul class="ed-list">${BLOCOS.map(([k, nome, desc]) => `<li><div class="qt"><b>${nome}</b><span>${desc}</span></div><button class="sw-btn" data-bloco="${k}" aria-pressed="${!!p.blocos[k]}" aria-label="${p.blocos[k] ? "Esconder" : "Mostrar"} ${nome}">${sw(p.blocos[k])}</button></li>`).join("")}</ul>
+        </section>
+        <section class="card"><div class="card-h"><h3>Tarefas que a prefeitura vê</h3><span class="hint">esconda as internas</span></div>
+          <ul class="ed-list">${tarefas.map(({ t, f }) => { const on = visivel(t); return `<li class="${on ? "" : "off"}"><div class="qt"><b>${esc(t.titulo)}</b><span>${esc(f.nome)} · ${DONO.i[t.dono]}</span></div><button class="btn sm ghost eye" data-ocultar="${t.id}">${on ? I.eye + "Visível" : I.eyeoff + "Escondida"}</button></li>`; }).join("")}</ul>
+        </section>
+      </div>
+      <aside class="col-side">
+        <section class="card"><div class="card-h"><h3>Avisos</h3><span class="hint">aparecem no topo do Início</span></div>
+          <ul class="ed-items">${p.avisos.map((a) => `<li><div class="qt"><b>${esc(a.titulo)}</b><span>${esc(a.texto)}</span></div><button class="dr-x" data-delaviso="${a.id}" aria-label="Remover aviso">${I.trash}</button></li>`).join("") || `<li class="empty">Nenhum aviso.</li>`}</ul>
+          <form class="ed-form" data-add="aviso"><input name="titulo" placeholder="Título do aviso" required><textarea name="texto" rows="2" placeholder="Texto curto pra prefeitura" required></textarea><button class="btn sm" type="submit">${I.plus}Adicionar aviso</button></form>
+        </section>
+        <section class="card"><div class="card-h"><h3>Links e documentos</h3></div>
+          <ul class="ed-items">${p.links.map((l) => `<li><div class="qt"><b>${esc(l.titulo)}</b><span>${esc(l.url)}</span></div><button class="dr-x" data-dellink="${l.id}" aria-label="Remover link">${I.trash}</button></li>`).join("") || `<li class="empty">Nenhum link.</li>`}</ul>
+          <form class="ed-form" data-add="link"><input name="titulo" placeholder="Nome (ex.: Lei do Alvará)" required><input name="url" type="url" placeholder="https://…" required><button class="btn sm" type="submit">${I.plus}Adicionar link</button></form>
+        </section>
+      </aside></div>`;
   };
 
 
@@ -1152,9 +1211,35 @@
   document.addEventListener("click", (e) => {
     const el = (s) => e.target.closest(s);
     let x;
-    if ((x = el(".role button"))) {
-      try { localStorage.setItem("timao-role", x.dataset.role); } catch (er) {}
-      go(x.dataset.role, ROUTES[x.dataset.role][x.dataset.role === "i" ? 1 : 0].id);
+    if (el("[data-preview]")) {
+      try { sessionStorage.setItem("timao-prev", "1"); } catch (er) {}
+      go("c", "inicio");
+      return;
+    }
+    if (el("[data-back]")) { go("i", "painel"); return; }
+    const editou = (msg) => { log("painel", msg); save(); toast("Painel do cliente atualizado."); refresh(); };
+    if ((x = el("[data-bloco]"))) {
+      const k = x.dataset.bloco, nome = BLOCOS.find((b) => b[0] === k)[1];
+      PN().blocos[k] = !PN().blocos[k];
+      editou(`Implantadora ${PN().blocos[k] ? "mostrou" : "escondeu"} "${nome}" no painel da prefeitura`);
+      return;
+    }
+    if ((x = el("[data-ocultar]"))) {
+      const id = x.dataset.ocultar, t = findTask(id), o = PN().ocultas;
+      PN().ocultas = o.includes(id) ? o.filter((y) => y !== id) : [...o, id];
+      editou(`Tarefa "${t.titulo}" ${PN().ocultas.includes(id) ? "escondida do" : "visível no"} painel da prefeitura`);
+      return;
+    }
+    if ((x = el("[data-delaviso]"))) {
+      const a = PN().avisos.find((y) => y.id === x.dataset.delaviso);
+      PN().avisos = PN().avisos.filter((y) => y !== a);
+      editou(`Aviso "${a.titulo}" removido do painel da prefeitura`);
+      return;
+    }
+    if ((x = el("[data-dellink]"))) {
+      const l = PN().links.find((y) => y.id === x.dataset.dellink);
+      PN().links = PN().links.filter((y) => y !== l);
+      editou(`Link "${l.titulo}" removido do painel da prefeitura`);
       return;
     }
     if (e.target.id === "scrim") { closeDrawer(); return; }
@@ -1260,6 +1345,16 @@
     const tk = t.ticket || novoTicket();
     log("ticket", `${S.cliente.contato} enviou "${up.files[0].name}" pelo painel: anexado ao ${tk} e regras extraídas pelo agente`);
     save(); toast("Arquivo recebido. A Aprova já está usando."); refresh();
+  });
+  document.addEventListener("submit", (e) => {
+    const f = e.target.closest("form[data-add]");
+    if (!f) return;
+    e.preventDefault();
+    const v = Object.fromEntries(new FormData(f));
+    if (f.dataset.add === "aviso") PN().avisos.push({ id: "a" + Date.now(), titulo: v.titulo.trim(), texto: v.texto.trim() });
+    else PN().links.push({ id: "l" + Date.now(), titulo: v.titulo.trim(), url: v.url.trim() });
+    log("painel", `${f.dataset.add === "aviso" ? "Aviso" : "Link"} "${v.titulo.trim()}" publicado no painel da prefeitura`);
+    save(); toast("Publicado no painel do cliente."); refresh();
   });
   $("#closePlayer").addEventListener("click", closePlayer);
   document.addEventListener("keydown", (e) => {

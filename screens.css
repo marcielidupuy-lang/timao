@@ -327,3 +327,36 @@ button.kpi:hover .go { color: var(--ink); transform: translateX(2px); }
 .dr-alert.risco { background: var(--red-soft); }
 .dr-alert p { margin-top: 4px; font-size: 13px; color: var(--ink-2); }
 .dr-alert .saude { font-weight: 600; color: var(--ink); }
+
+/* painel do cliente separado: botões no topo e editor */
+.role { background: none; padding: 0; gap: 8px; align-items: center; }
+.prev-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--cyan-d); background: var(--cyan-soft); padding: 5px 10px; border-radius: 99px; white-space: nowrap; }
+.prev-tag svg { width: 15px; height: 15px; }
+.ed-list, .ed-items { list-style: none; margin: 0; padding: 0; }
+.ed-list li, .ed-items li { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line-2); }
+.ed-list li:first-child, .ed-items li:first-child { border-top: 0; }
+.ed-list li.off .qt b { color: var(--faint); text-decoration: line-through; }
+.ed-items .qt span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ed-items .dr-x svg { width: 16px; height: 16px; }
+.sw-btn { border: 0; background: none; padding: 4px; }
+.sw { display: inline-block; width: 36px; height: 21px; border-radius: 99px; background: #d4d4d8; position: relative; transition: background .15s; vertical-align: middle; }
+.sw i { position: absolute; top: 2.5px; left: 2.5px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.2); transition: transform .15s; }
+.sw.on { background: var(--ink); }
+.sw.on i { transform: translateX(15px); }
+.btn.eye { min-width: 104px; justify-content: center; }
+.ed-form { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line-2); align-items: flex-start; }
+.ed-form input, .ed-form textarea { width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font: inherit; font-size: 13px; outline: none; resize: vertical; }
+.ed-form input:focus, .ed-form textarea:focus { border-color: #cfcfd6; box-shadow: 0 0 0 4px #f4f4f6; }
+.avisos { display: flex; flex-direction: column; gap: 8px; margin-bottom: 28px; }
+.aviso { display: flex; align-items: center; gap: 14px; border: 1px solid var(--cyan); background: #fbfeff; border-radius: 12px; padding: 12px 14px; }
+.links { list-style: none; margin: 0; padding: 0; }
+.links li a { display: flex; align-items: center; gap: 8px; padding: 7px 0; font-size: 13.5px; }
+.links li a svg { width: 16px; height: 16px; color: var(--muted); }
+.links li a:hover { text-decoration: underline; }
+.grid.solo { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 860px) {
+  .role .btn { padding: 6px 9px; }
+  .prev-tag { display: none; }
+}
+.role button.btn { background: var(--ink); color: #fff; padding: 6px 12px; font-size: 12.5px; border-radius: 9px; font-weight: 500; }
+.role button.btn.ghost { background: #fff; color: var(--ink); border: 1px solid var(--line); }
