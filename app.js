@@ -1,5 +1,5 @@
 (() => {
-  const KEY = "timao-state-v1";
+  const KEY = "timao-state-v2";
   const $ = (s, el = document) => el.querySelector(s);
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -18,16 +18,16 @@
   }
 
   // ---------- ícones ----------
-  const sv = (p, vb = "0 0 24 24") => `<svg viewBox="${vb}">${p}</svg>`;
+  const sv = (p) => `<svg viewBox="0 0 24 24">${p}</svg>`;
   const I = {
     check: sv('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
     x: sv('<path d="M6 6l12 12M18 6L6 18"/>'),
     clock: sv('<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>'),
-    clip: sv('<path d="M20 11.5l-8.3 8.3a5 5 0 01-7.1-7.1l8.8-8.8a3.3 3.3 0 014.7 4.7l-8.8 8.8a1.7 1.7 0 01-2.4-2.4l8.1-8.1"/>'),
     plus: sv('<path d="M12 5v14M5 12h14"/>'),
     mic: sv('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/>'),
     up: sv('<path d="M12 19V5M6 11l6-6 6 6"/>'),
     chev: sv('<path d="M7 10l5 5 5-5"/>'),
+    right: sv('<path d="M9 6l6 6-6 6"/>'),
     cal: sv('<rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16"/>'),
     play: sv('<path d="M7 4l13 8-13 8z"/>'),
     cursor: sv('<path d="M5 3l14 8-6 1.5L10 19z" fill="#18181b" stroke="#fff" stroke-width="1.4"/>'),
@@ -48,31 +48,45 @@
     chart: sv('<path d="M4 4v16h16"/><path d="M7 15l4-5 3 3 5-7"/>'),
     bell: sv('<path d="M6 16V11a6 6 0 0112 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 004 0"/>'),
     form: sv('<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>'),
+    layers: sv('<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/>'),
+    upload: sv('<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/>'),
     sparkle: sv('<path d="M12 4v4M12 16v4M4 12h4M16 12h4M7 7l2 2M15 15l2 2M7 17l2-2M15 9l2-2"/>'),
     logo: '<svg viewBox="0 0 40 40" class="sc-logo"><path d="M10 33L20 8l10 25" stroke="#111" stroke-width="3.4" fill="none"/><path d="M2 22h36" stroke="#14c3d6" stroke-width="3.2"/></svg>',
     logoSm: '<svg viewBox="0 0 40 40"><path d="M10 33L20 8l10 25" stroke="#111" stroke-width="3.4" fill="none"/><path d="M2 22h36" stroke="#14c3d6" stroke-width="3.2"/></svg>'
   };
   const GATILHO = {
-    prazo: { ic: I.clock, nome: "Prazo vencido" },
-    whatsapp: { ic: I.whatsapp, nome: "WhatsApp" },
-    ticket: { ic: I.ticket, nome: "Chamado" },
-    agenda: { ic: I.cal, nome: "Agenda" },
-    reuniao: { ic: I.meet, nome: "Fim de reunião" },
-    painel: { ic: I.spark, nome: "Painel" }
+    prazo: { ic: I.clock, nome: "Prazo vencido", instr: "03-fup-whatsapp" },
+    whatsapp: { ic: I.whatsapp, nome: "WhatsApp", instr: "03-fup-whatsapp" },
+    ticket: { ic: I.ticket, nome: "Chamado", instr: "04-videos-validacao" },
+    agenda: { ic: I.cal, nome: "Agenda", instr: "05-champions" },
+    reuniao: { ic: I.meet, nome: "Fim de reunião", instr: "02-acionaveis-reuniao" },
+    painel: { ic: I.spark, nome: "Painel", instr: "04-videos-validacao" },
+    manual: { ic: I.bolt, nome: "Execução pedida", instr: "01-gatilhos" }
   };
-  const DONO = { prefeitura: "Prefeitura", aprova: "Aprova", agente: "Agente" };
-  const VST = { aprovado: "Aprovado", reprovado: "Ajuste pedido", pendente: "Aguardando você", ajuste: "Em ajuste pelo agente" };
-  const OUTRAS = [
-    { nome: "Serra Azul · SP", pct: 64 },
-    { nome: "Porto Claro · PR", pct: 38 },
-    { nome: "Rio Fundo · MG", pct: 12 }
+  const INSTR = [
+    ["00-regras-gerais", "Tom, canais, limites e quando chamar você"],
+    ["01-gatilhos", "Roteador: classifica o evento e chama a instrução certa"],
+    ["02-acionaveis-reuniao", "Reunião vira tarefas e tickets preenchidos"],
+    ["03-fup-whatsapp", "Cobra o que está 2 dias atrasado e responde sobre prazo"],
+    ["04-videos-validacao", "Gera o vídeo de cada ajuste e trata ✓ ✗ 📅"],
+    ["05-champions", "Primeiro contato, agenda, pauta e confirmação"],
+    ["06-cadastro-usuarios", "Link de cadastro e cadastro no prefeitura.aprova"]
   ];
+  const REPO = "https://github.com/marcielidupuy-lang/timao/blob/main/INSTRUCTIONS/";
+  // Na visão da prefeitura o agente é "Aprova": o cliente não precisa saber quem executa.
+  const DONO = { i: { prefeitura: "Prefeitura", aprova: "Aprova", agente: "Agente" }, c: { prefeitura: "Sua equipe", aprova: "Aprova", agente: "Aprova" } };
+  const VST = {
+    i: { aprovado: "Aprovado", reprovado: "Ajuste pedido", pendente: "Com a prefeitura", ajuste: "Em ajuste pelo agente" },
+    c: { aprovado: "Aprovado", reprovado: "Ajuste pedido", pendente: "Aguardando você", ajuste: "A Aprova está ajustando" }
+  };
+  const SAUDE = { ok: "No prazo", atencao: "Atenção", risco: "Em risco" };
 
   // ---------- datas ----------
   const now = () => new Date();
   const d = (iso) => new Date(iso);
   const dia = (iso) => d(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
   const hora = (iso) => d(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const diaSem = (iso) => d(iso).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "2-digit" });
   const isoNow = () => {
     const n = now();
     const p = (x) => String(x).padStart(2, "0");
@@ -86,33 +100,83 @@
     return `${dia(iso)}, ${hora(iso)}`;
   }
   const daysUntil = (iso) => Math.ceil((d(iso) - now()) / 86400000);
+  const saudacao = () => { const h = now().getHours(); return h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite"; };
 
-  // ---------- helpers de estado ----------
+  // ---------- consultas ----------
   const allTasks = () => S.fases.flatMap((f) => f.tasks.map((t) => ({ ...t, fase: f })));
+  const findTask = (id) => { for (const f of S.fases) { const t = f.tasks.find((x) => x.id === id); if (t) return t; } };
   const isLate = (t) => !t.feito && d(t.data) < now();
   const entrega = () => { const t = allTasks(); return Math.round((t.filter((x) => x.feito).length / t.length) * 100); };
-  function log(gatilho, texto) {
-    S.atividade.unshift({ hora: isoNow(), gatilho, texto, novo: true });
-  }
+  const ativa = () => S.fases.find((f) => f.status === "ativa");
+  const vidsPend = () => S.validacoes.filter((v) => v.status === "pendente");
+  const ajustes = () => S.validacoes.filter((v) => v.status === "reprovado" || v.status === "ajuste");
+  const doCliente = () => allTasks().filter((t) => t.dono === "prefeitura" && !t.feito && t.fase.status === "ativa");
+  const minhas = () => allTasks().filter((t) => t.dono !== "prefeitura" && !t.feito && t.fase.status === "ativa");
+  const semResposta = () => allTasks().filter((t) => t.dono === "prefeitura" && isLate(t));
+  const proxReunioes = () => S.reunioes.filter((r) => r.status === "agendada").sort((a, b) => d(a.data) - d(b.data));
+  function log(gatilho, texto) { S.atividade.unshift({ hora: isoNow(), gatilho, texto, novo: true }); }
   let ticketSeq = 18380;
   const novoTicket = () => "#" + ticketSeq++;
+
+  // ---------- rotas ----------
+  const ROUTES = {
+    i: [
+      { id: "carteira", nome: "Minha carteira", ic: "layers", geral: true },
+      { id: "visao", nome: "Visão geral", ic: "home" },
+      { id: "fila", nome: "Minha fila", ic: "clipboard", badge: () => ajustes().length + minhas().length + semResposta().length },
+      { id: "fases", nome: "Fases e tarefas", ic: "form" },
+      { id: "reunioes", nome: "Reuniões", ic: "meet" },
+      { id: "validacoes", nome: "Validações", ic: "video", badge: () => ajustes().length },
+      { id: "usuarios", nome: "Usuários", ic: "users" },
+      { id: "agente", nome: "Agente", ic: "bolt" }
+    ],
+    c: [
+      { id: "inicio", nome: "Início", ic: "home", badge: () => doCliente().length + vidsPend().length },
+      { id: "andamento", nome: "Andamento", ic: "chart" },
+      { id: "validacoes", nome: "Validações", ic: "video", badge: () => vidsPend().length },
+      { id: "reunioes", nome: "Reuniões", ic: "meet" },
+      { id: "equipe", nome: "Minha equipe", ic: "users" }
+    ]
+  };
+  let ROLE = "i", PAGE = "carteira";
+  function parseHash() {
+    const m = location.hash.match(/^#\/(i|c)\/([a-z]+)/);
+    if (m && ROUTES[m[1]].some((r) => r.id === m[2])) { ROLE = m[1]; PAGE = m[2]; return; }
+    let r = "i";
+    try { r = localStorage.getItem("timao-role") || "i"; } catch (e) {}
+    ROLE = r === "c" ? "c" : "i";
+    PAGE = ROUTES[ROLE][0].id;
+  }
+  const go = (role, page) => { location.hash = `#/${role}/${page}`; };
 
   // ---------- casca ----------
   function renderShell() {
     const rail = ["chat", "docok", "users", "money", "form", "clipboard", "building", "chart"];
     $("#railIcons").innerHTML = rail.map((k) => `<span class="rail-btn ${k === "form" ? "on" : ""}">${I[k]}</span>`).join("");
     $("#railBell").innerHTML = I.bell;
-    document.querySelectorAll(".ni[data-ic]").forEach((el) => (el.innerHTML = I[el.dataset.ic]));
-  }
-  function renderTop() {
+    document.querySelectorAll(".role button").forEach((b) => b.setAttribute("aria-selected", b.dataset.role === ROLE));
+    $("#avatar").textContent = ROLE === "i" ? "MD" : "AR";
     const c = S.cliente;
-    const ativa = S.fases.find((f) => f.status === "ativa");
-    $("#crumbName").textContent = c.nome;
-    $("#eyebrow").textContent = `Implantação · ${ativa ? ativa.nome + " em andamento" : "concluída"}`;
-    $("#heroTitle").innerHTML = `${esc(c.nome)}.<span>Implantação da prefeitura toda.</span>`;
-    $("#heroMeta").textContent = `${c.secretarias} secretarias · ${c.processos} processos · implantadora ${c.implantador} · champion ${c.champion} · Pylon ${c.pylon}`;
-    $("#implantacoes").innerHTML = [{ nome: `${c.nome.replace("Prefeitura de ", "")} · ${c.uf}`, pct: entrega(), on: true }, ...OUTRAS]
-      .map((p) => `<button class="impl ${p.on ? "on" : ""}" ${p.on ? "" : 'data-outra="1"'}><span class="ni">${I.building}</span>${esc(p.nome)}<span class="pct">${p.pct}%</span></button>`).join("");
+    $("#who").innerHTML = ROLE === "i"
+      ? `<span class="who-k">Implantadora</span><b>${esc(c.implantador)}</b>`
+      : `<span class="who-k">${esc(c.nome)}</span><b>${esc(c.champion)}</b>`;
+    const items = ROUTES[ROLE];
+    const link = (r) => {
+      const n = r.badge ? r.badge() : 0;
+      return `<a class="nav2-item ${r.id === PAGE ? "on" : ""}" href="#/${ROLE}/${r.id}"><span class="ni">${I[r.ic]}</span>${r.nome}${n ? `<span class="badge">${n}</span>` : ""}</a>`;
+    };
+    if (ROLE === "i") {
+      $("#nav").innerHTML = link(items[0]) + `<div class="nav2-label">${esc(c.nome.replace("Prefeitura de ", ""))} · ${c.uf}</div>` + items.slice(1).map(link).join("");
+      $("#nav2Extra").innerHTML = `<div class="nav2-label">Instruções do agente</div><a class="nav2-item small" href="${REPO}" target="_blank" rel="noopener"><span class="ni">${I.bolt}</span>Abrir pasta INSTRUCTIONS</a>`;
+    } else {
+      $("#nav").innerHTML = items.map(link).join("");
+      $("#nav2Extra").innerHTML = `<div class="help-card"><b>Precisa de ajuda?</b><span>Fale com a Aprova pelo WhatsApp ou pelo ai.aprova no Início.</span></div>`;
+    }
+    $("#navM").innerHTML = items.map((r) => { const n = r.badge ? r.badge() : 0; return `<a class="${r.id === PAGE ? "on" : ""}" href="#/${ROLE}/${r.id}">${r.nome}${n ? ` <span class="badge">${n}</span>` : ""}</a>`; }).join("");
+    const cur = items.find((r) => r.id === PAGE);
+    $("#crumb").innerHTML = ROLE === "i"
+      ? (PAGE === "carteira" ? `<b>Minha carteira</b>` : `<a href="#/i/carteira">Carteira</a><span class="sep">/</span><span>${esc(c.nome.replace("Prefeitura de ", ""))}</span><span class="sep">/</span><b>${cur.nome}</b>`)
+      : `<span>${esc(c.nome)}</span><span class="sep">/</span><b>${cur.nome}</b>`;
   }
   let lastSync = Date.now();
   function pulseSync() {
@@ -125,84 +189,68 @@
   function tickSync() {
     if ($("#sync").classList.contains("busy")) return;
     const s = Math.round((Date.now() - lastSync) / 1000);
-    $("#syncTxt").textContent = s < 5 ? "Pylon sincronizado agora" : `Pylon sincronizado há ${s < 60 ? s + "s" : Math.round(s / 60) + " min"}`;
+    $("#syncTxt").textContent = s < 5 ? "Pylon sincronizado agora" : `Pylon há ${s < 60 ? s + "s" : Math.round(s / 60) + " min"}`;
   }
 
-  // ---------- KPIs ----------
-  function renderKpis() {
-    const tasks = allTasks();
-    const aguardando = tasks.filter((t) => t.dono === "prefeitura" && !t.feito).length + S.validacoes.filter((v) => v.status === "pendente").length;
-    const pct = entrega();
-    const aprovados = S.validacoes.filter((v) => v.status === "aprovado").length;
-    const dias = daysUntil(S.cliente.meta + "T09:00");
-    $("#kpis").innerHTML = `
-      <div class="kpi ${aguardando ? "alert" : "good"}"><span class="k">Aguardando você</span><span class="v">${aguardando}</span><span class="s">tarefas e vídeos da prefeitura</span></div>
-      <div class="kpi"><span class="k">Entrega</span><span class="v">${pct}%</span><div class="bar"><i style="width:${pct}%"></i></div></div>
-      <div class="kpi good"><span class="k">Reunião evitada</span><span class="v">${S.cliente.horasReuniaoEvitadas}h</span><span class="s">validação por vídeo em vez de call</span></div>
-      <div class="kpi"><span class="k">Go-live</span><span class="v">${dias} dias</span><span class="s">${aprovados} de ${S.validacoes.length} vídeos aprovados · meta ${dia(S.cliente.meta + "T09:00")}</span></div>`;
-  }
+  // ---------- peças reaproveitadas ----------
+  const hero = (eyebrow, h1, sub, meta) => `<section class="hero"><p class="eyebrow"><span class="dot-c"></span>${eyebrow}</p><h1>${h1}<span>${sub}</span></h1>${meta ? `<p class="hero-meta">${meta}</p>` : ""}</section>`;
+  const secTitle = (t, hint = "", extra = "") => `<div class="sec-title"><h2>${t}</h2>${hint ? `<span class="hint">${hint}</span>` : ""}${extra}</div>`;
+  const kpi = (k, v, s, cls = "", bar) => `<div class="kpi ${cls}"><span class="k">${k}</span><span class="v">${v}</span>${bar !== undefined ? `<div class="bar"><i style="width:${bar}%"></i></div>` : `<span class="s">${s}</span>`}</div>`;
 
-  // ---------- fases ----------
-  function renderFases() {
+  function fasesHTML() {
     const ST = { ativa: "Em andamento", futura: "Próxima", concluida: "Concluída" };
-    const ativa = S.fases.find((f) => f.status === "ativa");
-    $("#fasesHint").textContent = ativa ? `${ativa.nome}: ${ativa.tasks.filter((t) => t.feito).length} de ${ativa.tasks.length} tarefas feitas` : "";
-    $("#fases").innerHTML = S.fases.map((f) => {
+    return S.fases.map((f) => {
       const feitas = f.tasks.filter((t) => t.feito).length;
       const tasks = [...f.tasks].sort((a, b) => (isLate(b) - isLate(a)) || (a.feito - b.feito) || (d(a.data) - d(b.data)));
       return `<section class="fase ${f.status}">
         <div class="fase-h"><h3>${esc(f.nome)}</h3><span class="fase-st">${ST[f.status]}</span><span class="count">${feitas}/${f.tasks.length}</span><span class="desc">${esc(f.descricao)}</span></div>
         <ul class="tasks">${tasks.map((t) => {
           const late = isLate(t);
-          const podeMarcar = t.dono === "prefeitura" && f.status === "ativa";
+          const pode = f.status === "ativa" && (ROLE === "i" ? t.dono !== "prefeitura" : t.dono === "prefeitura");
+          const nota = late ? (ROLE === "i" ? "atrasada · agente já cobrou no WhatsApp" : "atrasada") : "";
           return `<li class="task ${t.feito ? "done" : ""} ${late ? "late" : ""}">
-            <button class="cb" ${podeMarcar ? `data-task="${t.id}"` : "disabled"} aria-label="${t.feito ? "Feito" : "Marcar como feito"}">${t.feito ? I.check : ""}</button>
+            <button class="cb" ${pode ? `data-task="${t.id}"` : "disabled"} aria-label="${t.feito ? "Feito" : "Marcar como feito"}">${t.feito ? I.check : ""}</button>
             <div class="t"><span class="tt">${esc(t.titulo)}</span>
-              <span class="meta"><span class="tag ${t.dono}">${DONO[t.dono]}</span>${t.ticket ? `<span class="tag ticket">${esc(t.ticket)}</span>` : ""}${late ? `<span class="late-tag">atrasada · agente já cobrou no WhatsApp</span>` : ""}</span>
+              <span class="meta"><span class="tag ${ROLE === "c" && t.dono === "agente" ? "aprova" : t.dono}">${DONO[ROLE][t.dono]}</span>${ROLE === "i" && t.ticket ? `<span class="tag ticket">${esc(t.ticket)}</span>` : ""}${nota ? `<span class="late-tag">${nota}</span>` : ""}</span>
             </div>
             <span class="when">${dia(t.data)}<b>${hora(t.data)}</b></span>
+            ${ROLE === "i" && t.dono === "agente" && !t.feito ? `<button class="run" data-run="${t.id}" title="Executar com o agente" aria-label="Executar com o agente">${I.right}</button>` : "<span></span>"}
           </li>`;
         }).join("")}</ul>
       </section>`;
     }).join("");
   }
 
-  // ---------- reuniões ----------
-  function renderReunioes() {
+  function reuniaoHTML(r, full = true) {
     const ico = { feito: I.check, atrasado: I.clock, andamento: I.bolt };
-    $("#reunioes").innerHTML = [...S.reunioes].sort((a, b) => d(b.data) - d(a.data)).map((r) => `
-      <div class="reu">
-        <div class="k">${esc(r.secretaria)}<span class="st ${r.status}">${r.status === "realizada" ? "Realizada" : "Agendada"}</span></div>
-        <h3>${esc(r.titulo)}</h3>
-        <div class="d">${dia(r.data)} · ${hora(r.data)}${r.duracao ? ` · ${r.duracao} min` : ""}</div>
-        ${r.acionaveis ? `<ul>${r.acionaveis.map((a) => `<li><span class="ic s-${a.status}">${ico[a.status] || I.dot}</span><span>${esc(a.texto)} <span class="tag ${a.dono}">${DONO[a.dono]}</span>${a.fup ? `<span class="sub">${esc(a.fup)}</span>` : ""}</span></li>`).join("")}</ul>` : ""}
-        ${r.pauta ? `<div class="pauta-l">Pauta montada pelo agente</div><ul>${r.pauta.map((p) => `<li><span class="ic s-pauta">${I.dot}</span><span>${esc(p)}</span></li>`).join("")}</ul>` : ""}
-        ${r.confirmacao ? `<div class="conf">${esc(r.confirmacao)}</div>` : ""}
-      </div>`).join("");
+    const acoes = r.status === "agendada"
+      ? (ROLE === "c"
+        ? `<div class="row-btns">${r.presenca ? `<span class="ok-note">${I.check}Presença confirmada</span>` : `<button class="btn sm" data-presenca="${r.id}">Confirmar presença</button>`}<button class="btn sm ghost" data-remarcar="${r.id}">Remarcar</button></div>`
+        : `<div class="row-btns"><span class="hint">${r.presenca ? "Prefeitura confirmou presença" : esc(r.confirmacao || "")}</span></div>`)
+      : "";
+    const titAc = ROLE === "c" ? "O que ficou combinado" : "Acionáveis";
+    return `<div class="reu">
+      <div class="k">${esc(r.secretaria)}<span class="st ${r.status}">${r.status === "realizada" ? "Realizada" : "Agendada"}</span></div>
+      <h3>${esc(r.titulo)}</h3>
+      <div class="d">${diaSem(r.data)} · ${hora(r.data)}${r.duracao ? ` · ${r.duracao} min` : ""}</div>
+      ${full && r.acionaveis ? `<div class="pauta-l">${titAc}</div><ul>${r.acionaveis.map((a) => `<li><span class="ic s-${a.status}">${ico[a.status] || I.dot}</span><span>${esc(a.texto)} <span class="tag ${ROLE === "c" && a.dono === "agente" ? "aprova" : a.dono}">${DONO[ROLE][a.dono]}</span>${ROLE === "i" && a.fup ? `<span class="sub">${esc(a.fup)}</span>` : ""}</span></li>`).join("")}</ul>` : ""}
+      ${full && r.pauta ? `<div class="pauta-l">${ROLE === "i" ? "Pauta montada pelo agente" : "Pauta"}</div><ul>${r.pauta.map((p) => `<li><span class="ic s-pauta">${I.dot}</span><span>${esc(p)}</span></li>`).join("")}</ul>` : ""}
+      ${acoes}
+    </div>`;
   }
 
-  // ---------- checklist ----------
-  function renderChecklist() {
-    const pend = allTasks().filter((t) => t.dono === "prefeitura" && t.fase.status === "ativa").sort((a, b) => a.feito - b.feito || d(a.data) - d(b.data));
-    const vids = S.validacoes.filter((v) => v.status === "pendente");
-    const items = [
-      ...pend.map((t) => {
-        const dd = daysUntil(t.data);
-        const aviso = t.feito ? "" : isLate(t) ? `Atrasada desde ${dia(t.data)}` : dd <= 1 ? "Falta 1 dia" : "";
-        return `<li class="${t.feito ? "done" : ""}"><button class="rd" data-task="${t.id}" aria-label="Marcar">${t.feito ? I.check : ""}</button><span>${esc(t.titulo)}${aviso ? `<small>${aviso}</small>` : ""}</span></li>`;
-      }),
-      ...vids.map((v) => `<li><button class="rd" data-open="${v.id}" aria-label="Abrir vídeo"></button><span>Validar vídeo: ${esc(v.processo)}<small class="new">vídeo novo</small></span></li>`)
-    ];
-    $("#checklist").innerHTML = items.join("") || `<li class="empty">Nada pendente hoje 🎉</li>`;
-  }
-
-  // ---------- feed do agente ----------
-  function renderFeed() {
-    $("#feed").innerHTML = S.atividade.slice(0, 30).map((a) => {
+  function feedHTML(n = 30) {
+    const html = S.atividade.slice(0, n).map((a) => {
       const g = GATILHO[a.gatilho] || GATILHO.painel;
-      return `<li class="${a.novo ? "new" : ""}"><span class="g">${g.ic}</span><span><span class="trg">${g.nome}</span> · ${esc(a.texto)}<span class="when">${rel(a.hora)}</span></span></li>`;
+      return `<li class="${a.novo ? "new" : ""}"><span class="g">${g.ic}</span><span><span class="trg">${g.nome}</span> · ${esc(a.texto)}<span class="when">${rel(a.hora)} · <a href="${REPO}${g.instr}.md" target="_blank" rel="noopener">${g.instr}</a></span></span></li>`;
     }).join("");
     S.atividade.forEach((a) => delete a.novo);
+    return `<ol class="feed">${html}</ol>`;
+  }
+
+  function usuariosHTML() {
+    const L = { cadastrado: ROLE === "i" ? "Cadastrado pelo agente" : "Com acesso", preenchido: "Dados preenchidos", "link-enviado": "Link enviado" };
+    return `<div class="card flush"><div class="tbl-wrap"><table><thead><tr><th>Nome</th><th>Cargo</th><th>Secretaria</th><th>Status</th></tr></thead><tbody>${S.usuarios.map((u) => `<tr><td><b>${esc(u.nome)}</b></td><td>${esc(u.cargo)}</td><td>${esc(u.secretaria)}</td><td><span class="ust ${u.status}">${L[u.status]}</span></td></tr>`).join("")}</tbody></table></div></div>`;
   }
 
   // ---------- vídeo de validação ----------
@@ -213,7 +261,7 @@
     const base = ["Nome do requerente", "CPF / CNPJ", "Endereço do imóvel"];
     const slug = v.processo.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-");
     const campos = base.map((l) => `<div class="ui-f"><label>${esc(l)}</label><div class="in"></div></div>`).join("") +
-      v.alteracoes.map((l, i) => `<div class="ui-f novo" data-f="${i}"><label>${esc(l)}</label><div class="in"></div></div>`).join("");
+      v.alteracoes.map((l, i) => `<div class="ui-f novo" data-fi="${i}"><label>${esc(l)}</label><div class="in"></div></div>`).join("");
     return `<div class="vid" aria-hidden="true">
       <div class="prog">${Array.from({ length: steps(v) }, () => "<i><b></b></i>").join("")}</div>
       <div class="scene intro on">
@@ -243,15 +291,15 @@
     const n = steps(v);
     const scene = step === 0 ? "intro" : step === n - 1 ? "outro" : "screen";
     vid.querySelectorAll(".scene").forEach((s) => s.classList.toggle("on", s.classList.contains(scene)));
-    vid.querySelectorAll(".prog i").forEach((p, i) => { p.className = i < step ? "done" : i === step ? "cur" : ""; });
     vid.style.setProperty("--dur", STEP_MS + "ms");
-    const cur = vid.querySelector(".prog i.cur");
-    if (cur) { cur.className = ""; void cur.offsetWidth; cur.className = "cur"; }
+    vid.querySelectorAll(".prog i").forEach((p, i) => { p.className = i < step ? "done" : ""; });
+    const cur = vid.querySelectorAll(".prog i")[step];
+    if (cur) { void cur.offsetWidth; cur.className = "cur"; }
     if (scene !== "screen") return;
     const k = step - 1;
-    vid.querySelectorAll(".ui-f").forEach((f) => f.classList.toggle("hl", f.dataset.f === String(k)));
+    vid.querySelectorAll(".ui-f").forEach((f) => f.classList.toggle("hl", f.dataset.fi === String(k)));
     $(".cap", vid).textContent = v.alteracoes[k];
-    const f = vid.querySelector(`.ui-f[data-f="${k}"] .in`);
+    const f = vid.querySelector(`.ui-f[data-fi="${k}"] .in`);
     const box = vid.getBoundingClientRect();
     const r = f.getBoundingClientRect();
     const c = $(".cursor", vid);
@@ -259,31 +307,194 @@
     c.style.top = ((r.top - box.top + r.height * 0.5) / box.height) * 100 + "%";
   }
 
-  // ---------- validações ----------
   let filtro = "todos";
-  function renderValidacoes() {
+  function validacoesHTML() {
     const cont = { todos: S.validacoes.length };
     S.validacoes.forEach((v) => (cont[v.status] = (cont[v.status] || 0) + 1));
-    const tabs = [["todos", "Todos"], ["pendente", "Aguardando você"], ["aprovado", "Aprovados"], ["reprovado", "Ajuste pedido"], ["ajuste", "Em ajuste"]].filter(([k]) => k === "todos" || cont[k]);
+    const tabs = [["todos", "Todos"], ["pendente", VST[ROLE].pendente], ["reprovado", "Ajuste pedido"], ["ajuste", "Em ajuste"], ["aprovado", "Aprovados"]].filter(([k]) => k === "todos" || cont[k]);
     if (!tabs.some(([k]) => k === filtro)) filtro = "todos";
-    $("#filters").innerHTML = tabs.map(([k, l]) => `<button role="tab" data-f="${k}" aria-selected="${k === filtro}">${l} · ${cont[k]}</button>`).join("");
     const lista = S.validacoes.filter((v) => filtro === "todos" || v.status === filtro);
-    $("#vgrid").innerHTML = lista.map((v) => `
-      <button class="vcard" data-open="${v.id}">
-        <div class="vthumb">${vidHTML(v)}<span class="dur">0:${String(Math.round((steps(v) * STEP_MS) / 1000)).padStart(2, "0")}</span><span class="play"><span>${I.play}</span></span></div>
-        <div class="vlabel"><span class="st-ic ${v.status}">${v.status === "aprovado" ? I.check : v.status === "reprovado" ? I.x : v.status === "ajuste" ? I.bolt : I.clock}</span>${esc(v.processo)}</div>
-        <div class="vsub">${esc(VST[v.status])} · ${esc(v.secretaria)} · ${esc(v.ticket)}</div>
-      </button>`).join("");
+    return `<div class="center"><div class="filters" role="tablist">${tabs.map(([k, l]) => `<button role="tab" data-filtro="${k}" aria-selected="${k === filtro}">${l} · ${cont[k]}</button>`).join("")}</div></div>
+      <div class="vgrid">${lista.map((v) => `
+        <div class="vcard">
+          <button class="vthumb" data-open="${v.id}" aria-label="Assistir ${esc(v.processo)}">${vidHTML(v)}<span class="dur">0:${String(Math.round((steps(v) * STEP_MS) / 1000)).padStart(2, "0")}</span><span class="play"><span>${I.play}</span></span></button>
+          <div class="vlabel"><span class="st-ic ${v.status}">${v.status === "aprovado" ? I.check : v.status === "reprovado" ? I.x : v.status === "ajuste" ? I.bolt : I.clock}</span>${esc(v.processo)}</div>
+          <div class="vsub">${esc(VST[ROLE][v.status])} · ${esc(v.secretaria)}${ROLE === "i" ? ` · ${esc(v.ticket)}` : ""}</div>
+          ${ROLE === "i" && (v.status === "reprovado" || v.status === "ajuste") ? `<div class="vact"><span class="quote">“${esc(v.comentario || "")}”</span><button class="btn sm" data-regerar="${v.id}">Gerar vídeo novo</button></div>` : ""}
+          ${ROLE === "c" && v.status === "pendente" ? `<div class="vact"><button class="btn sm" data-open="${v.id}">Assistir e validar</button></div>` : ""}
+        </div>`).join("")}</div>`;
   }
 
-  // ---------- usuários ----------
-  function renderUsuarios() {
-    const L = { cadastrado: "Cadastrado pelo agente", preenchido: "Dados preenchidos", "link-enviado": "Link enviado" };
-    $("#usuarios").innerHTML = `<thead><tr><th>Nome</th><th>Cargo</th><th>Secretaria</th><th>Status</th></tr></thead><tbody>${S.usuarios.map((u) => `<tr><td><b>${esc(u.nome)}</b></td><td>${esc(u.cargo)}</td><td>${esc(u.secretaria)}</td><td><span class="ust ${u.status}">${L[u.status]}</span></td></tr>`).join("")}</tbody>`;
+  // ---------- telas do implantador ----------
+  const VIEWS = {};
+  VIEWS["i/carteira"] = () => {
+    const c = S.cliente;
+    const vv = { nome: c.nome.replace("Prefeitura de ", ""), uf: c.uf, fase: `${ativa() ? ativa().nome : ""} · Obras`, pct: entrega(), atrasadas: semResposta().length, videos: vidsPend().length, ajustes: ajustes().length, proxima: proxReunioes()[0] && proxReunioes()[0].data, saude: semResposta().length ? "atencao" : "ok", aberta: true };
+    const todas = [vv, ...S.carteira];
+    const atencao = todas.filter((p) => p.saude !== "ok").length;
+    const sum = (k) => todas.reduce((a, p) => a + p[k], 0);
+    return hero("Minha carteira", `${saudacao()}, ${esc(c.implantador.split(" ")[0])}.`, `${todas.length} implantações, ${atencao} pedem atenção.`, "Prefeituras inteiras ao mesmo tempo: o agente cuida das cobranças, das pautas e dos vídeos.") +
+      `<section class="kpis">
+        ${kpi("Implantações", todas.length, "prefeitura toda")}
+        ${kpi("Ajustes pra você", sum("ajustes"), "pedidos pelas prefeituras", sum("ajustes") ? "alert" : "good")}
+        ${kpi("Vídeos com as prefeituras", sum("videos"), "aguardando validação")}
+        ${kpi("Reunião evitada", "74h", "nas 4 implantações", "good")}
+      </section>` +
+      `<div class="block-sm">${secTitle("Implantações", "ordenadas por quem precisa de você")}<div class="pgrid">${todas.sort((a, b) => ({ risco: 0, atencao: 1, ok: 2 }[a.saude] - { risco: 0, atencao: 1, ok: 2 }[b.saude])).map((p) => `
+        <div class="pcard">
+          <div class="pc-h"><b>${esc(p.nome)} · ${p.uf}</b><span class="saude ${p.saude}">${SAUDE[p.saude]}</span></div>
+          <div class="pc-f">${esc(p.fase)}</div>
+          <div class="pc-bar"><div class="bar"><i style="width:${p.pct}%"></i></div><span>${p.pct}%</span></div>
+          <div class="pc-chips">
+            <span class="${p.ajustes ? "hot" : ""}">${p.ajustes} ajuste${p.ajustes === 1 ? "" : "s"} pra você</span>
+            <span class="${p.atrasadas ? "warn" : ""}">${p.atrasadas} atrasada${p.atrasadas === 1 ? "" : "s"} na prefeitura</span>
+            <span>${p.videos} vídeo${p.videos === 1 ? "" : "s"} em validação</span>
+          </div>
+          <div class="pc-foot"><span class="hint">${p.proxima ? `Próxima reunião ${dia(p.proxima)} · ${hora(p.proxima)}` : "Sem reunião marcada"}</span>${p.aberta ? `<a class="btn sm" href="#/i/visao">Abrir</a>` : `<button class="btn sm ghost" data-outra="1">Abrir</button>`}</div>
+        </div>`).join("")}</div></div>`;
+  };
+
+  VIEWS["i/visao"] = () => {
+    const c = S.cliente;
+    const pct = entrega();
+    const fila = filaItems().slice(0, 4);
+    const prox = proxReunioes();
+    return hero(`${ativa() ? ativa().nome + " em andamento" : "Implantação"}`, `${esc(c.nome)}.`, "Implantação da prefeitura toda.", `${c.secretarias} secretarias · ${c.processos} processos · champion ${esc(c.champion)} · Pylon ${esc(c.pylon)}`) +
+      `<section class="kpis">
+        ${kpi("Entrega", pct + "%", "", "", pct)}
+        ${kpi("Com a prefeitura", doCliente().length + vidsPend().length, "tarefas e vídeos", doCliente().length + vidsPend().length ? "alert" : "good")}
+        ${kpi("Reunião evitada", c.horasReuniaoEvitadas + "h", "validação por vídeo", "good")}
+        ${kpi("Go-live", daysUntil(c.meta + "T09:00") + " dias", "meta " + dia(c.meta + "T09:00"))}
+      </section>
+      <section class="ask"><h2 class="ask-h">O que o agente faz por você agora?</h2><div data-ai="i"></div></section>
+      <div class="grid">
+        <div class="col-main">
+          ${secTitle("Sua fila", `${filaItems().length} itens`, `<a class="more" href="#/i/fila">Ver tudo ${I.right}</a>`)}
+          <div class="queue">${fila.map(filaItemHTML).join("") || `<p class="empty">Nada na sua fila 🎉</p>`}</div>
+          <div class="block-sm">${secTitle("Próximas reuniões", "", `<a class="more" href="#/i/reunioes">Ver todas ${I.right}</a>`)}<div class="reu-grid">${prox.slice(0, 2).map((r) => reuniaoHTML(r, false)).join("")}</div></div>
+        </div>
+        <aside class="col-side"><section class="card"><div class="card-h"><h3>Agente em ação</h3><span class="live"><span class="dot"></span>ao vivo</span></div>${feedHTML(6)}<a class="more" href="#/i/agente">Ver o que o agente fez ${I.right}</a></section></aside>
+      </div>`;
+  };
+
+  function filaItems() {
+    return [
+      ...ajustes().map((v) => ({ tipo: "ajuste", v })),
+      ...semResposta().map((t) => ({ tipo: "cobrar", t })),
+      ...minhas().map((t) => ({ tipo: "tarefa", t }))
+    ];
+  }
+  function filaItemHTML(it) {
+    if (it.tipo === "ajuste") {
+      const v = it.v;
+      return `<div class="qitem"><span class="qi red">${I.x}</span><div class="qt"><b>${esc(v.processo)}: ${v.status === "ajuste" ? "agente ajustando" : "ajuste pedido"}</b><span>“${esc(v.comentario || "")}” · ${esc(v.ticket)}</span></div><div class="qa"><button class="btn sm ghost" data-open="${v.id}">Ver vídeo</button><button class="btn sm" data-regerar="${v.id}">Gerar vídeo novo</button></div></div>`;
+    }
+    const t = it.t;
+    if (it.tipo === "cobrar") {
+      const fup = t.fupEm ? `FUP enviado ${rel(t.fupEm)}` : "agente cobrou no WhatsApp";
+      return `<div class="qitem"><span class="qi amber">${I.clock}</span><div class="qt"><b>Prefeitura atrasada: ${esc(t.titulo)}</b><span>prazo ${dia(t.data)} · ${fup}</span></div><div class="qa"><button class="btn sm ghost" data-cobrar="${t.id}">Cobrar de novo</button></div></div>`;
+    }
+    return `<div class="qitem"><span class="qi">${t.dono === "agente" ? I.bolt : I.clipboard}</span><div class="qt"><b>${esc(t.titulo)}</b><span>${DONO.i[t.dono]} · ${dia(t.data)} ${hora(t.data)}${t.ticket ? " · " + esc(t.ticket) : ""}</span></div><div class="qa">${t.dono === "agente" ? `<button class="btn sm" data-run="${t.id}">Executar ${I.right}</button>` : `<button class="btn sm ghost" data-task="${t.id}">Concluir</button>`}</div></div>`;
   }
 
-  function renderAll() {
-    renderTop(); renderKpis(); renderFases(); renderReunioes(); renderChecklist(); renderFeed(); renderValidacoes(); renderUsuarios();
+  VIEWS["i/fila"] = () => {
+    const a = ajustes(), s = semResposta(), m = minhas();
+    const grp = (t, hint, list) => `<div class="block-sm">${secTitle(t, hint)}<div class="queue">${list.map(filaItemHTML).join("") || `<p class="empty">Nada aqui.</p>`}</div></div>`;
+    return hero("Minha fila", "O que é seu.", "O resto o agente resolve.", "Ajustes pedidos pela prefeitura, cobranças que precisam de você e tarefas da Aprova.") +
+      grp("Ajustes pedidos pela prefeitura", "viram vídeo novo para validar", a.map((v) => ({ tipo: "ajuste", v }))) +
+      grp("Prefeitura atrasada", "o agente já mandou FUP; depois de 2 sem resposta, é com você", s.map((t) => ({ tipo: "cobrar", t }))) +
+      grp("Tarefas da Aprova e do agente", "fase ativa", m.map((t) => ({ tipo: "tarefa", t })));
+  };
+
+  VIEWS["i/fases"] = () => hero("Fases e tarefas", "Fases da implantação.", "Tudo que está previsto.", "Você conclui o que é da Aprova. O que é da prefeitura, ela marca no painel dela.") + fasesHTML();
+
+  VIEWS["i/reunioes"] = () => {
+    const ag = proxReunioes(), re = S.reunioes.filter((r) => r.status === "realizada").sort((a, b) => d(b.data) - d(a.data));
+    return hero("Reuniões", "Menos reuniões.", "As que sobram rendem mais.", `O agente monta a pauta, confirma na véspera e transforma o que foi falado em acionáveis.`) +
+      `<div class="block-sm">${secTitle("Agendadas", "", `<button class="btn sm" data-novareuniao="1">${I.plus}Nova reunião com pauta do agente</button>`)}<div class="reu-grid">${ag.map((r) => reuniaoHTML(r)).join("") || `<p class="empty">Nenhuma reunião marcada.</p>`}</div></div>
+       <div class="block-sm">${secTitle("Realizadas", "acionáveis já criados pelo agente")}<div class="reu-grid">${re.map((r) => reuniaoHTML(r)).join("")}</div></div>`;
+  };
+
+  VIEWS["i/validacoes"] = () => `<section class="big-h"><p class="eyebrow"><span class="dot-c"></span>Validações</p><h2>Cada ajuste vira um vídeo.<span>A prefeitura aprova sem reunião.</span></h2><p class="lead">Quando pedem mudança, ela cai aqui com o comentário. Gere o vídeo novo e ele volta pra prefeitura.</p></section>` + validacoesHTML();
+
+  VIEWS["i/usuarios"] = () => hero("Usuários", "Usuários da prefeitura.", "Cadastrados pelo agente.", "O agente manda o link, a pessoa preenche e ele cadastra no prefeitura.aprova.") +
+    `<div class="sec-title"><span></span><button class="btn sm" data-convidar="1">Reenviar links pendentes</button></div>` + usuariosHTML();
+
+  VIEWS["i/agente"] = () => {
+    const cont = {};
+    S.atividade.forEach((a) => { const g = (GATILHO[a.gatilho] || GATILHO.painel).instr; cont[g] = (cont[g] || 0) + 1; });
+    return hero("Agente", "O que o agente fez.", "E qual instrução ele seguiu.", "Cada ação mostra o gatilho e a instrução da pasta INSTRUCTIONS.") +
+      `<div class="grid"><div class="col-main"><section class="card">${feedHTML(50)}</section></div>
+        <aside class="col-side"><section class="card"><div class="card-h"><h3>Instruções</h3><span class="hint">ações nesta implantação</span></div>
+          <ul class="instr">${INSTR.map(([k, desc]) => `<li><a href="${REPO}${k}.md" target="_blank" rel="noopener"><b>${k}</b><span>${desc}</span></a><span class="n">${cont[k] || "–"}</span></li>`).join("")}</ul>
+        </section></aside></div>`;
+  };
+
+  // ---------- telas da prefeitura ----------
+  VIEWS["c/inicio"] = () => {
+    const c = S.cliente;
+    const tarefas = doCliente(), vids = vidsPend();
+    const n = tarefas.length + vids.length;
+    const prox = proxReunioes()[0];
+    const todo = [
+      ...vids.map((v) => `<div class="todo"><span class="qi cyan">${I.video}</span><div class="qt"><b>Validar o vídeo do ${esc(v.processo)}</b><span>${v.alteracoes.length} mudanças · ${Math.round((steps(v) * STEP_MS) / 1000)} segundos</span></div><button class="btn sm" data-open="${v.id}">Assistir</button></div>`),
+      ...tarefas.map((t) => `<div class="todo ${isLate(t) ? "late" : ""}"><span class="qi ${isLate(t) ? "red" : "amber"}">${I.clipboard}</span><div class="qt"><b>${esc(t.titulo)}</b><span>${isLate(t) ? `Atrasada desde ${dia(t.data)}` : `Até ${dia(t.data)} às ${hora(t.data)}`}</span></div><div class="qa">${/enviar|devolver/i.test(t.titulo) ? `<label class="btn sm">${I.upload}Enviar<input type="file" hidden data-upload="${t.id}"></label>` : ""}<button class="btn sm ghost" data-task="${t.id}">Feito</button></div></div>`)
+    ];
+    return hero(c.nome, `Olá, ${esc(c.contato)}.`, n ? `${n} coisa${n > 1 ? "s" : ""} depende${n > 1 ? "m" : ""} de você.` : "Nada depende de você hoje.", "") +
+      `<div class="grid"><div class="col-main">
+          ${secTitle("Para fazer", "o resto a Aprova resolve")}
+          <div class="queue">${todo.join("") || `<p class="empty">Tudo em dia 🎉</p>`}</div>
+          <section class="ask left"><h2 class="ask-h">Por onde começamos?</h2><div data-ai="c"></div></section>
+        </div>
+        <aside class="col-side">
+          ${prox ? `<section class="card"><div class="card-h"><h3>Próxima reunião</h3></div>${reuniaoHTML(prox)}</section>` : ""}
+          <section class="card"><div class="card-h"><h3>Andamento</h3><a class="more" href="#/c/andamento">Ver ${I.right}</a></div>
+            <div class="prog-big"><span class="v">${entrega()}%</span><span class="hint">da implantação entregue · go-live ${dia(c.meta + "T09:00")}</span></div>
+            <div class="bar"><i style="width:${entrega()}%"></i></div>
+            <ul class="mini-fases">${S.fases.map((f) => `<li class="${f.status}"><span></span>${esc(f.nome)} · ${esc(f.descricao)}</li>`).join("")}</ul>
+          </section>
+        </aside></div>`;
+  };
+
+  VIEWS["c/andamento"] = () => hero("Andamento", "Como está a implantação.", `${entrega()}% entregue.`, "Marque aqui o que a sua equipe já fez. O que é da Aprova, a gente atualiza.") + fasesHTML();
+
+  VIEWS["c/validacoes"] = () => `<section class="big-h"><p class="eyebrow"><span class="dot-c"></span>Validações</p><h2>Assista, aprove, pronto.<span>Sem precisar de reunião.</span></h2><p class="lead">Cada vídeo mostra só o que mudou no formulário. Se algo estiver errado, fale com o ai.aprova ali mesmo.</p></section>` + validacoesHTML();
+
+  VIEWS["c/reunioes"] = () => {
+    const ag = proxReunioes(), re = S.reunioes.filter((r) => r.status === "realizada").sort((a, b) => d(b.data) - d(a.data));
+    return hero("Reuniões", "Reuniões curtas.", "Com pauta e combinado por escrito.", "") +
+      `<div class="block-sm">${secTitle("Próximas")}<div class="reu-grid">${ag.map((r) => reuniaoHTML(r)).join("") || `<p class="empty">Nenhuma reunião marcada.</p>`}</div></div>
+       <div class="block-sm">${secTitle("Já aconteceram")}<div class="reu-grid">${re.map((r) => reuniaoHTML(r)).join("")}</div></div>`;
+  };
+
+  VIEWS["c/equipe"] = () => hero("Minha equipe", "Quem usa o sistema.", "Convide pelo WhatsApp.", "Mande o link, a pessoa preenche os dados e a Aprova libera o acesso.") +
+    `<div class="sec-title"><span></span><button class="btn sm" data-convidar="1">${I.whatsapp}Convidar alguém</button></div>` + usuariosHTML();
+
+  // ---------- render ----------
+  function render() {
+    renderShell();
+    $("#view").innerHTML = VIEWS[`${ROLE}/${PAGE}`]();
+    document.querySelectorAll("[data-ai]").forEach((el) => el.appendChild(aiBox(el.dataset.ai === "i" ? {
+      placeholder: "Peça ao agente: resumo pro secretário, cobrar pendências, montar pauta…",
+      sugs: [
+        { ic: "form", t: "Resumo para o secretário", d: "Status da implantação em 3 linhas, pronto pro WhatsApp." },
+        { ic: "whatsapp", t: "Cobrar pendências", d: "FUP de tudo que está atrasado na prefeitura." },
+        { ic: "cal", t: "Montar pauta da próxima reunião", d: "Com o que falta decidir em cada processo." }
+      ]
+    } : {
+      placeholder: "Escreva uma mensagem, grave um áudio ou anexe a lei…",
+      sugs: [
+        { ic: "video", t: "Validar processos", d: "Abre os vídeos que estão esperando a sua aprovação." },
+        { ic: "form", t: "Alteração de Formulário", d: "Diga o que muda. Pode mandar PDF, foto ou áudio." },
+        { ic: "users", t: "Cadastro de Usuários", d: "Envia o link de cadastro para a sua equipe no WhatsApp." }
+      ]
+    })));
+  }
+  function refresh() {
+    // Re-renderiza a tela sem perder a rolagem.
+    const y = window.scrollY;
+    render();
+    window.scrollTo(0, y);
   }
 
   // ---------- ai.aprova (simulado na demo; em produção é o agente) ----------
@@ -318,7 +529,7 @@
       say("user", esc(text));
       input.value = "";
       const t = say("bot", "digitando…", "typing");
-      setTimeout(() => { t.remove(); say("bot", responder(text, ctx)); }, 800);
+      setTimeout(() => { t.remove(); say("bot", responder(text, ctx)); renderShell(); }, 800);
     };
     $("form", box).addEventListener("submit", (e) => { e.preventDefault(); send(input.value); });
     input.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input.value); } });
@@ -338,7 +549,7 @@
         t.remove();
         const tk = novoTicket();
         log("ticket", `Arquivo "${f.name}" recebido pelo painel: regras extraídas e anexadas ao ${tk}`);
-        save(); renderFeed();
+        save();
         say("bot", `Recebi <b>${esc(f.name)}</b>. Extraí as regras e anexei ao chamado ${tk}. Quando o formulário estiver ajustado, mando o vídeo de validação aqui e no WhatsApp.`);
       }, 1200);
       e.target.value = "";
@@ -348,7 +559,7 @@
       if (mic.classList.contains("rec")) {
         mic.classList.remove("rec");
         input.placeholder = placeholder;
-        send(ctx ? "O prazo de resposta tem que ser 30 dias, não 15" : "Quero mudar o formulário do Alvará");
+        send(ctx ? "O prazo de resposta tem que ser 30 dias, não 15" : ROLE === "i" ? "Resumo para o secretário" : "Quero mudar o formulário do Alvará");
       } else {
         mic.classList.add("rec");
         input.placeholder = "Gravando… toque de novo para enviar";
@@ -365,10 +576,26 @@
       v.comentario = text;
       log("painel", `Ajuste pedido no vídeo do ${v.processo}: "${text}". Agente atualizou o ${v.ticket} e já está ajustando`);
       save(); afterChange(v.id);
-      return `Anotado no chamado ${esc(v.ticket)}. Já estou ajustando o <b>${esc(v.processo)}</b> e te mando um vídeo novo em até 2h, aqui e no WhatsApp.`;
+      return `Anotado. Já estou ajustando o <b>${esc(v.processo)}</b> e te mando um vídeo novo em até 2h, aqui e no WhatsApp.`;
+    }
+    if (ROLE === "i") {
+      if (t.includes("resumo")) {
+        const c = S.cliente;
+        return `Pronto pra mandar no WhatsApp:\n\n“${c.contato}, a implantação está ${entrega()}% entregue. ${S.validacoes.filter((v) => v.status === "aprovado").length} formulários já aprovados, ${vidsPend().length} vídeos esperando vocês e ${semResposta().length} pendência atrasada (${semResposta()[0] ? esc(semResposta()[0].titulo.toLowerCase()) : "nenhuma"}). Go-live em ${dia(c.meta + "T09:00")}.”`;
+      }
+      if (t.includes("cobr") || t.includes("penden")) {
+        const s = semResposta();
+        s.forEach((x) => { findTask(x.id).fupEm = isoNow(); log("prazo", `FUP no WhatsApp: "${x.titulo}" está atrasada desde ${dia(x.data)}`); });
+        save();
+        return s.length ? `Mandei FUP de <b>${s.length}</b> pendência${s.length > 1 ? "s" : ""} no privado de quem é responsável. Se não responderem em 48h, te aviso.` : "Nada atrasado na prefeitura agora.";
+      }
+      if (t.includes("pauta")) {
+        const r = proxReunioes()[0];
+        return r ? `Pauta da <b>${esc(r.titulo)}</b> (${dia(r.data)}):\n• ${(r.pauta || []).map(esc).join("\n• ")}\n\nAcrescentei: decidir o prazo do Alvará, que segue sem a lei.` : "Não há reunião marcada. Quer que eu agende?";
+      }
     }
     if (t.includes("valid")) {
-      const pend = S.validacoes.filter((v) => v.status === "pendente");
+      const pend = vidsPend();
       if (!pend.length) return "Nenhum vídeo aguardando você agora. Quando eu terminar um ajuste, ele aparece aqui.";
       setTimeout(() => openPlayer(pend[0].id), 900);
       return `Você tem <b>${pend.length} vídeo${pend.length > 1 ? "s" : ""}</b> pra validar. Abrindo o primeiro: ${esc(pend[0].processo)}. Arraste pra cima pra ver o próximo.`;
@@ -386,46 +613,59 @@
     }
     const tk = novoTicket();
     log("ticket", `Pedido pelo painel virou o chamado ${tk}: "${text}"`);
-    save(); renderFeed();
+    save();
     return `Abri o chamado ${tk} com isso e já comecei. Te aviso aqui e no WhatsApp quando estiver pronto.`;
   }
 
   // ---------- player / reel ----------
   let playT = null, playId = null, playStep = 0;
+  // Botões compactos, na parte de baixo, junto do campo do ai.aprova.
+  function slideActs(v) {
+    return ROLE === "c"
+      ? `<button class="act ok" data-act="ok">${I.check}Aprovar</button>
+         <button class="act no" data-act="no">${I.x}Ajustar</button>
+         <button class="act cal" data-act="cal" title="Agendar conversa" aria-label="Agendar conversa">${I.cal}</button>`
+      : `<button class="act cal wide" data-act="zap">${I.whatsapp}Reenviar no WhatsApp</button>
+         ${v.status === "reprovado" || v.status === "ajuste" ? `<button class="act ok" data-regerar="${v.id}">${I.bolt}Gerar vídeo novo</button>` : ""}`;
+  }
   function slideHTML(v) {
+    const acts = slideActs(v);
+    const side = ROLE === "c"
+      ? `<h4>O que precisa mudar?</h4><p class="sub">Fale com o ai.aprova sobre este vídeo</p>`
+      : `<h4>Visão do implantador</h4><p class="sub">Só a prefeitura aprova. Aqui você vê o que ela disse e reenvia o link.</p>`;
     return `<section class="slide" data-id="${v.id}">
       <div class="stage">
-        <div class="stage-h"><span class="pill">${esc(v.processo)}</span><span class="vstatus ${v.status}">${esc(VST[v.status])}</span></div>
-        <div class="who">${esc(v.secretaria)} · ${esc(v.ticket)} · vídeo gerado pelo agente ${rel(v.gerado)}</div>
+        <div class="stage-h"><span class="pill">${esc(v.processo)}</span><span class="vstatus ${v.status}">${esc(VST[ROLE][v.status])}</span></div>
+        <div class="who">${esc(v.secretaria)}${ROLE === "i" ? ` · ${esc(v.ticket)}` : ""} · vídeo gerado ${rel(v.gerado)}</div>
         <div class="vidwrap">${vidHTML(v)}</div>
       </div>
-      <div class="actions">
-        <button class="act ok" data-act="ok" title="Aprovar">${I.check}</button><span class="act-l">Aprovar</span>
-        <button class="act no" data-act="no" title="Pedir ajuste">${I.x}</button><span class="act-l">Ajustar</span>
-        <button class="act cal" data-act="cal" title="Agendar conversa">${I.cal}</button><span class="act-l">Agendar</span>
-      </div>
       <div class="side">
-        <h4>O que precisa mudar?</h4>
-        <p class="sub">Fale com o ai.aprova sobre este vídeo</p>
+        ${side}
         ${v.comentario ? `<div class="comment ${v.status === "aprovado" ? "ok" : ""}">${esc(v.comentario)}</div>` : ""}
-        <div class="ai-slot"></div>
+        ${ROLE === "c" ? `<div class="ai-slot"></div>` : `<ul class="alt-list">${v.alteracoes.map((a, i) => `<li><span>${i + 1}</span>${esc(a)}</li>`).join("")}</ul><div class="act-row">${acts}</div>`}
       </div>
     </section>`;
   }
   function openPlayer(id) {
     const reel = $("#reel");
     reel.innerHTML = S.validacoes.map(slideHTML).join("");
-    reel.querySelectorAll(".slide").forEach((sl) => {
+    reel.querySelectorAll(".ai-slot").forEach((slot) => {
+      const sl = slot.closest(".slide");
+      const v = S.validacoes.find((x) => x.id === sl.dataset.id);
       const box = aiBox({
-        placeholder: "Ex.: o prazo é 30 dias, não 15",
+        placeholder: "O que precisa mudar? Ex.: o prazo é 30 dias",
         ctx: sl.dataset.id,
         sugs: [
-          { ic: "check", t: "Está tudo certo", d: "aprova o vídeo", msg: "__aprovar" },
           { ic: "form", t: "Falta um campo", d: "diga qual" },
           { ic: "clock", t: "Mudar um prazo", d: "da análise ou da resposta" }
         ]
       });
-      $(".ai-slot", sl).replaceWith(box);
+      // A linha de botões fica logo acima do campo de conversa.
+      const row = document.createElement("div");
+      row.className = "act-row";
+      row.innerHTML = slideActs(v);
+      $("form", box).before(row);
+      slot.replaceWith(box);
     });
     $("#player").hidden = false;
     document.body.style.overflow = "hidden";
@@ -448,6 +688,7 @@
     $("#player").hidden = true;
     document.body.style.overflow = "";
     clearInterval(playT);
+    refresh();
   }
   function decide(id, status) {
     const v = S.validacoes.find((x) => x.id === id);
@@ -455,19 +696,19 @@
     if (status === "aprovado") {
       v.comentario = `Aprovado pela prefeitura em ${dia(isoNow())}`;
       log("painel", `Prefeitura aprovou o vídeo do ${v.processo}. O agente fechou o ${v.ticket} e marcou o processo como pronto pro go-live`);
-      toast(`${v.processo} aprovado. Ticket ${v.ticket} fechado.`);
+      toast(`${v.processo} aprovado.`);
     }
     save(); afterChange(id);
     if (status === "aprovado") setTimeout(() => nextSlide(id), 700);
   }
   function afterChange(id) {
-    renderTop(); renderKpis(); renderChecklist(); renderFeed(); renderValidacoes();
+    renderShell();
     const sl = $(`#reel [data-id="${id}"]`);
     if (!sl) return;
     const v = S.validacoes.find((x) => x.id === id);
     const st = $(".vstatus", sl);
     st.className = `vstatus ${v.status}`;
-    st.textContent = VST[v.status];
+    st.textContent = VST[ROLE][v.status];
     let cm = $(".comment", sl);
     if (v.comentario) {
       if (!cm) { cm = document.createElement("div"); $(".side .sub", sl).after(cm); }
@@ -480,7 +721,7 @@
     const nx = sl && sl.nextElementSibling;
     if (nx) $("#reel").scrollTo({ top: nx.offsetTop, behavior: "smooth" });
   }
-  function showSlots(sl) {
+  function showSlots(sl, onPick) {
     const old = $(".slots", sl);
     if (old) { old.remove(); return; }
     const base = now();
@@ -490,21 +731,82 @@
     });
     const box = document.createElement("div");
     box.className = "slots";
-    box.innerHTML = `<h5>Conversar 15 min com a implantadora</h5>${opts.map((o) => `<button data-iso="${o.toISOString()}">${o.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" })} · ${o.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</button>`).join("")}`;
+    box.innerHTML = `<h5>Escolha um horário</h5>${opts.map((o) => `<button data-iso="${o.toISOString()}">${o.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" })} · ${o.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</button>`).join("")}`;
     sl.appendChild(box);
     box.addEventListener("click", (e) => {
       const b = e.target.closest("button");
       if (!b) return;
-      const v = S.validacoes.find((x) => x.id === sl.dataset.id);
-      const when = new Date(b.dataset.iso);
+      e.stopPropagation();
+      const w = new Date(b.dataset.iso);
       const p = (x) => String(x).padStart(2, "0");
-      const iso = `${when.getFullYear()}-${p(when.getMonth() + 1)}-${p(when.getDate())}T${p(when.getHours())}:00`;
-      S.reunioes.push({ id: "r" + Date.now(), titulo: `Conversa rápida · ${v.processo}`, data: iso, secretaria: v.secretaria, status: "agendada", confirmacao: "Agente confirma no WhatsApp um dia antes", pauta: [`Dúvidas sobre o vídeo do ${v.processo}`, ...v.alteracoes] });
-      log("agenda", `Conversa de 15 min sobre o ${v.processo} agendada para ${dia(iso)} às ${hora(iso)}. Pauta montada com as alterações do vídeo`);
-      save(); renderReunioes(); renderFeed();
       box.remove();
-      toast(`Agendado: ${dia(iso)} às ${hora(iso)}. Convite enviado no WhatsApp.`);
+      onPick(`${w.getFullYear()}-${p(w.getMonth() + 1)}-${p(w.getDate())}T${p(w.getHours())}:00`);
     });
+  }
+
+  // ---------- execução do agente (lateral direita) ----------
+  // Cada tarefa do agente vira um plano de passos ligado a uma instrução da pasta INSTRUCTIONS.
+  function plano(t) {
+    const tit = t.titulo.toLowerCase();
+    if (tit.includes("formul")) return { instr: "04-videos-validacao", passos: [
+      `Lendo o chamado ${t.ticket || ""} e os comentários da prefeitura`,
+      "Aplicando as regras no formulário clonado da cidade modelo",
+      "Testando o formulário em homologação",
+      "Gravando o vídeo de validação, só com o que mudou",
+      "Enviando o link do vídeo no WhatsApp da prefeitura"
+    ], fim: "Formulário ajustado. O vídeo foi pro Painel das Validações e a prefeitura foi avisada no WhatsApp." };
+    if (tit.includes("coletar") || tit.includes("regras")) return { instr: "05-champions", passos: [
+      "Buscando o champion da secretaria no Pylon",
+      "Mandando as 4 perguntas de apresentação no WhatsApp",
+      "Lendo leis, formulários e planilhas que já chegaram",
+      "Preenchendo os tickets de cada processo com as regras",
+      "Criando as perguntas que faltam como tarefa da prefeitura"
+    ], fim: "Regras coletadas e tickets preenchidos. O que ficou em aberto virou pergunta no WhatsApp do champion." };
+    if (tit.includes("champion")) return { instr: "05-champions", passos: [
+      "Lendo o organograma e os contatos do contrato",
+      "Mandando a apresentação no WhatsApp de cada secretaria",
+      "Registrando quem é quem no Pylon",
+      "Agendando a primeira reunião com quem respondeu"
+    ], fim: "Champions identificados e primeiras reuniões agendadas." };
+    if (tit.includes("cadastr") || tit.includes("usuár")) return { instr: "06-cadastro-usuarios", passos: [
+      "Lendo a lista de pessoas", "Enviando o link de cadastro no WhatsApp", "Conferindo os dados preenchidos", "Cadastrando no prefeitura.aprova"
+    ], fim: "Usuários cadastrados. Quem não preencheu recebe lembrete em 2 dias úteis." };
+    return { instr: "01-gatilhos", passos: ["Lendo o contexto da tarefa no Pylon", "Executando a tarefa", "Registrando o resultado no Pylon"], fim: "Tarefa executada e registrada no Pylon." };
+  }
+  let runT = null;
+  function runAgent(id) {
+    const t = findTask(id);
+    if (!t || t.feito) return;
+    const p = plano(t);
+    const dr = $("#drawer");
+    clearTimeout(runT);
+    dr.innerHTML = `<div class="dr-h"><span class="dr-k"><span class="pulse"></span>Agente executando</span><button class="dr-x" data-drclose="1" aria-label="Fechar">${I.x}</button></div>
+      <h3>${esc(t.titulo)}</h3>
+      <p class="dr-instr">Seguindo <a href="${REPO}${p.instr}.md" target="_blank" rel="noopener">${p.instr}</a>${t.ticket ? ` · ${esc(t.ticket)}` : ""}</p>
+      <ol class="steps">${p.passos.map((s) => `<li><span class="sp"></span><span>${esc(s)}</span></li>`).join("")}</ol>
+      <div class="dr-out"></div>`;
+    dr.hidden = false;
+    requestAnimationFrame(() => dr.classList.add("on"));
+    const lis = dr.querySelectorAll(".steps li");
+    let i = 0;
+    const step = () => {
+      if (i > 0) { lis[i - 1].className = "done"; lis[i - 1].querySelector(".sp").innerHTML = I.check; }
+      if (i < lis.length) { lis[i].className = "doing"; i++; runT = setTimeout(step, 1100); return; }
+      t.feito = true;
+      log("manual", `Agente executou "${t.titulo}" a pedido da implantadora (${p.instr})`);
+      save();
+      $(".dr-k", dr).innerHTML = `${I.check}Concluído`;
+      $(".dr-k", dr).classList.add("ok");
+      $(".dr-out", dr).innerHTML = `<p>${esc(p.fim)}</p><button class="btn sm ghost" data-drclose="1">Fechar</button>`;
+      refresh();
+    };
+    step();
+  }
+  function closeDrawer() {
+    const dr = $("#drawer");
+    dr.classList.remove("on");
+    clearTimeout(runT);
+    setTimeout(() => (dr.hidden = true), 250);
   }
 
   // ---------- toast ----------
@@ -519,64 +821,124 @@
 
   // ---------- eventos ----------
   document.addEventListener("click", (e) => {
-    const cb = e.target.closest("[data-task]");
-    if (cb) {
-      const t = allTasks().find((x) => x.id === cb.dataset.task);
-      const real = t.fase.tasks.find((x) => x.id === t.id);
-      real.feito = !real.feito;
-      if (real.feito) {
-        log("painel", `Prefeitura concluiu "${real.titulo}". O agente liberou o próximo passo`);
-        toast("Feito! O agente já seguiu com o próximo passo.");
-      }
-      save(); renderTop(); renderKpis(); renderFases(); renderChecklist(); renderFeed();
+    const el = (s) => e.target.closest(s);
+    let x;
+    if ((x = el(".role button"))) {
+      try { localStorage.setItem("timao-role", x.dataset.role); } catch (er) {}
+      go(x.dataset.role, ROUTES[x.dataset.role][x.dataset.role === "i" ? 1 : 0].id);
       return;
     }
-    const op = e.target.closest("[data-open]");
-    if (op) { openPlayer(op.dataset.open); return; }
-    const f = e.target.closest("[data-f]");
-    if (f && f.closest("#filters")) { filtro = f.dataset.f; renderValidacoes(); return; }
-    if (e.target.closest("[data-outra]")) { toast("Na demo, só Vale Verde tem dados."); return; }
-    const act = e.target.closest("[data-act]");
-    if (act) {
-      const sl = act.closest(".slide");
-      if (act.dataset.act === "ok") decide(sl.dataset.id, "aprovado");
-      if (act.dataset.act === "no") {
-        const v = S.validacoes.find((x) => x.id === sl.dataset.id);
+    if ((x = el("[data-run]"))) { runAgent(x.dataset.run); return; }
+    if (el("[data-drclose]")) { closeDrawer(); return; }
+    if ((x = el("[data-task]"))) {
+      const t = findTask(x.dataset.task);
+      t.feito = !t.feito;
+      if (t.feito) {
+        log("painel", ROLE === "c" ? `Prefeitura concluiu "${t.titulo}". O agente liberou o próximo passo` : `Implantadora concluiu "${t.titulo}"`);
+        toast(ROLE === "c" ? "Feito! A Aprova já seguiu com o próximo passo." : "Tarefa concluída.");
+      }
+      save(); refresh();
+      return;
+    }
+    if ((x = el("[data-open]"))) { openPlayer(x.dataset.open); return; }
+    if ((x = el("[data-filtro]"))) { filtro = x.dataset.filtro; refresh(); return; }
+    if (el("[data-outra]")) { toast("Na demo, só Vale Verde tem dados."); return; }
+    if ((x = el("[data-regerar]"))) {
+      const v = S.validacoes.find((y) => y.id === x.dataset.regerar);
+      if (v.comentario && !v.alteracoes.includes(v.comentario)) v.alteracoes = [...v.alteracoes, v.comentario].slice(-4);
+      v.status = "pendente"; v.gerado = isoNow(); v.comentario = "";
+      log("ticket", `Vídeo novo do ${v.processo} gerado com o ajuste pedido e enviado no WhatsApp da prefeitura`);
+      save(); toast(`Vídeo novo do ${v.processo} enviado pra prefeitura.`);
+      if (!$("#player").hidden) { closePlayer(); } else refresh();
+      return;
+    }
+    if ((x = el("[data-cobrar]"))) {
+      const t = findTask(x.dataset.cobrar);
+      t.fupEm = isoNow();
+      log("prazo", `FUP no WhatsApp: "${t.titulo}" está atrasada desde ${dia(t.data)}`);
+      save(); toast("FUP enviado no WhatsApp."); refresh();
+      return;
+    }
+    if ((x = el("[data-presenca]"))) {
+      const r = S.reunioes.find((y) => y.id === x.dataset.presenca);
+      r.presenca = true;
+      log("agenda", `${S.cliente.contato} confirmou presença na reunião "${r.titulo}"`);
+      save(); toast("Presença confirmada."); refresh();
+      return;
+    }
+    if ((x = el("[data-remarcar]"))) {
+      const card = x.closest(".reu");
+      const r = S.reunioes.find((y) => y.id === x.dataset.remarcar);
+      card.style.position = "relative";
+      showSlots(card, (iso) => {
+        r.data = iso; r.presenca = true;
+        log("agenda", `Reunião "${r.titulo}" remarcada para ${dia(iso)} às ${hora(iso)} a pedido da prefeitura`);
+        save(); toast(`Remarcada para ${dia(iso)} às ${hora(iso)}.`); refresh();
+      });
+      return;
+    }
+    if (el("[data-novareuniao]")) {
+      const nx = S.fases.find((f) => f.status === "futura");
+      const quando = new Date(now()); quando.setDate(quando.getDate() + 3); quando.setHours(10, 0, 0, 0);
+      const p = (n) => String(n).padStart(2, "0");
+      const iso = `${quando.getFullYear()}-${p(quando.getMonth() + 1)}-${p(quando.getDate())}T10:00`;
+      S.reunioes.push({ id: "r" + Date.now(), titulo: `Alinhamento · ${nx ? nx.descricao : "próximos processos"}`, data: iso, secretaria: "Várias", status: "agendada", confirmacao: "Agente confirma no WhatsApp um dia antes",
+        pauta: ["O que ficou pendente da fase atual", ...ajustes().map((v) => `Ajuste do ${v.processo}`), "Champions das próximas secretarias"] });
+      log("agenda", `Reunião de alinhamento agendada para ${dia(iso)} às 10:00, com pauta montada pelo agente`);
+      save(); toast("Reunião agendada com pauta do agente."); refresh();
+      return;
+    }
+    if (el("[data-convidar]")) {
+      const pend = S.usuarios.filter((u) => u.status === "link-enviado").map((u) => u.nome.split(" ")[0]);
+      log("whatsapp", `Link de cadastro enviado no WhatsApp${pend.length ? ` (lembrete para ${pend.join(", ")})` : ""}`);
+      save(); toast("Link de cadastro enviado no WhatsApp.");
+      return;
+    }
+    if ((x = el("[data-act]"))) {
+      const sl = x.closest(".slide");
+      const v = S.validacoes.find((y) => y.id === sl.dataset.id);
+      if (x.dataset.act === "ok") decide(v.id, "aprovado");
+      if (x.dataset.act === "no") {
         const inp = $(".side textarea", sl);
         inp.placeholder = "O que precisa mudar?";
         inp.focus();
         if (v.status !== "reprovado") { v.status = "reprovado"; save(); afterChange(v.id); }
       }
-      if (act.dataset.act === "cal") showSlots(sl);
+      if (x.dataset.act === "zap") { log("whatsapp", `Link do vídeo do ${v.processo} reenviado no WhatsApp da prefeitura`); save(); toast("Link reenviado no WhatsApp."); }
+      if (x.dataset.act === "cal") showSlots(sl, (iso) => {
+        S.reunioes.push({ id: "r" + Date.now(), titulo: `Conversa rápida · ${v.processo}`, data: iso, secretaria: v.secretaria, status: "agendada", confirmacao: "Agente confirma no WhatsApp um dia antes", pauta: [`Dúvidas sobre o vídeo do ${v.processo}`, ...v.alteracoes] });
+        log("agenda", `Conversa de 15 min sobre o ${v.processo} agendada para ${dia(iso)} às ${hora(iso)}. Pauta montada com as alterações do vídeo`);
+        save(); toast(`Agendado: ${dia(iso)} às ${hora(iso)}. Convite enviado no WhatsApp.`);
+      });
     }
   });
+  document.addEventListener("change", (e) => {
+    const up = e.target.closest("[data-upload]");
+    if (!up || !up.files[0]) return;
+    const t = findTask(up.dataset.upload);
+    t.feito = true;
+    const tk = t.ticket || novoTicket();
+    log("ticket", `${S.cliente.contato} enviou "${up.files[0].name}" pelo painel: anexado ao ${tk} e regras extraídas pelo agente`);
+    save(); toast("Arquivo recebido. A Aprova já está usando."); refresh();
+  });
   $("#closePlayer").addEventListener("click", closePlayer);
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#player").hidden) closePlayer(); });
-  $("#convidar").addEventListener("click", () => {
-    const pend = S.usuarios.filter((u) => u.status === "link-enviado").map((u) => u.nome.split(" ")[0]);
-    log("whatsapp", `Link de cadastro enviado no WhatsApp${pend.length ? ` (lembrete para ${pend.join(", ")})` : ""}`);
-    save(); renderFeed();
-    toast("Link de cadastro enviado no WhatsApp.");
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (!$("#player").hidden) closePlayer();
+    else if (!$("#drawer").hidden) closeDrawer();
   });
   $("#reset").addEventListener("click", () => {
     try { localStorage.removeItem(KEY); } catch (e) {}
     S = JSON.parse(JSON.stringify(window.DATA));
-    renderAll();
+    render();
     toast("Demo reiniciada.");
   });
+  window.addEventListener("hashchange", () => { parseHash(); render(); window.scrollTo(0, 0); });
 
   // ---------- início ----------
-  renderShell();
-  $("#helpAi").appendChild(aiBox({
-    placeholder: "Escreva uma mensagem, grave um áudio ou anexe a lei…",
-    sugs: [
-      { ic: "video", t: "Validar processos", d: "Abre os vídeos que estão esperando a sua aprovação." },
-      { ic: "form", t: "Alteração de Formulário", d: "Diga o que muda. Pode mandar PDF, foto ou áudio." },
-      { ic: "users", t: "Cadastro de Usuários", d: "Envia o link de cadastro para a sua equipe no WhatsApp." }
-    ]
-  }));
-  renderAll();
+  parseHash();
+  if (!location.hash) history.replaceState(null, "", `#/${ROLE}/${PAGE}`);
+  render();
   tickSync();
   setInterval(tickSync, 1000);
-  setInterval(renderFeed, 60000);
 })();

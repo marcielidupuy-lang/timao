@@ -30,6 +30,21 @@ Um painel único da implantação, com um agente que trabalha nos bastidores e c
 - Faz o primeiro contato com os champions: identifica quem é quem, agenda a reunião, monta a pauta e confirma um dia antes.
 - Cadastra os usuários no prefeitura.aprova.
 
+## Duas visões, telas separadas
+
+O seletor no topo troca entre **Implantador** e **Prefeitura**. Cada visão tem as suas telas:
+
+| Implantador | Prefeitura |
+|---|---|
+| **Minha carteira:** as 4 implantações, ordenadas por quem precisa de atenção | **Início:** o que depende de você hoje, a próxima reunião e o ai.aprova |
+| **Visão geral:** indicadores, sua fila e o que o agente fez | **Andamento:** fases e tarefas. Sua equipe marca o que já fez |
+| **Minha fila:** ajustes pedidos pela prefeitura, cobranças e tarefas da Aprova | **Validações:** vídeos em reel, com Aprovar e Ajustar junto do campo do ai.aprova |
+| **Fases e tarefas:** as tarefas do agente têm uma seta → que abre a execução na lateral | **Reuniões:** pauta, confirmar presença e remarcar |
+| **Reuniões, Validações, Usuários** | **Minha equipe:** convidar pelo WhatsApp |
+| **Agente:** cada ação com o gatilho e a instrução seguida | |
+
+Na visão da prefeitura, o agente aparece como "Aprova" e os números de ticket ficam escondidos. Só a prefeitura aprova um vídeo: o implantador pode reenviar o link ou gerar um vídeo novo quando pedem ajuste.
+
 ## Instruções do agente
 
 A pasta [INSTRUCTIONS](INSTRUCTIONS/) tem uma instrução por responsabilidade. O mapa de quem chama o quê está em [INSTRUCTIONS/README.md](INSTRUCTIONS/README.md).
@@ -62,5 +77,6 @@ npx serve .
 ```
 
 - `data.js` guarda o estado da implantação (dados fictícios).
-- `app.js` tem a interface. As respostas do ai.aprova são simuladas na demo.
+- `app.js` tem as telas e as duas visões. As respostas do ai.aprova e as execuções do agente são simuladas na demo.
+- Links diretos: `#/i/carteira` (implantador) e `#/c/inicio` (prefeitura).
 - Em "Reiniciar demo", no rodapé, o painel volta ao estado inicial.

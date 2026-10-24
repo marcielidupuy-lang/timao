@@ -12,8 +12,16 @@ window.DATA = {
     secretarias: 12,
     processos: 98,
     pylon: "PYL-4821",
-    horasReuniaoEvitadas: 31
+    horasReuniaoEvitadas: 31,
+    contato: "Ana"
   },
+
+  // Outras implantações da mesma implantadora (só o resumo, para a carteira).
+  carteira: [
+    { nome: "Serra Azul", uf: "SP", fase: "Fase 2 · Fazenda e Saúde", pct: 64, atrasadas: 0, videos: 2, ajustes: 0, proxima: "2026-10-27T14:00", saude: "ok" },
+    { nome: "Porto Claro", uf: "PR", fase: "Fase 1 · Obras", pct: 38, atrasadas: 3, videos: 5, ajustes: 2, proxima: "2026-10-29T09:30", saude: "risco" },
+    { nome: "Rio Fundo", uf: "MG", fase: "Kickoff", pct: 12, atrasadas: 1, videos: 0, ajustes: 0, proxima: "2026-10-25T10:00", saude: "atencao" }
+  ],
 
   fases: [
     {
