@@ -221,8 +221,14 @@
     $("#navM").innerHTML = items.map((r) => { const n = r.badge ? r.badge() : 0; return `<a class="${r.id === PAGE ? "on" : ""}" href="#/${ROLE}/${r.id}">${r.nome}${n ? ` <span class="badge">${n}</span>` : ""}</a>`; }).join("");
     const cur = items.find((r) => r.id === PAGE);
     $("#crumb").innerHTML = ROLE === "i"
-      ? (PAGE === "carteira" ? `<b>Minha carteira</b>` : `<a href="#/i/carteira">Carteira</a><span class="sep">/</span><span>${esc(c.nome.replace("Prefeitura de ", ""))}</span><span class="sep">/</span><b>${cur.nome}</b>`)
+      ? (PAGE === "carteira" ? `<b>Minha carteira</b>` : `<a href="#/i/carteira">Carteira</a><span class="sep">/</span>${seletorCliente()}<span class="sep">/</span><b>${cur.nome}</b>`)
       : `<span>${esc(c.nome)}</span><span class="sep">/</span><b>${cur.nome}</b>`;
+  }
+  // No caminho do topo, o nome do cliente é um seletor com as implantações da carteira.
+  function seletorCliente() {
+    const atual = S.cliente.nome.replace("Prefeitura de ", "");
+    const nomes = [atual, ...(window.DATA.carteira || []).map((p) => p.nome).filter((n) => n !== atual)];
+    return `<select class="crumb-sel" data-cliente="1" aria-label="Trocar de cliente">${nomes.map((n) => `<option value="${esc(n)}"${n === atual ? " selected" : ""}>${esc(n)}</option>`).join("")}</select>`;
   }
   let lastSync = Date.now();
   function pulseSync() {
@@ -1582,6 +1588,13 @@
     if (e.key === "Escape") { e.stopImmediatePropagation(); e.target.parentElement.querySelector(".ct-res").hidden = true; e.target.blur(); }
   });
   document.addEventListener("change", (e) => {
+    // Seletor de cliente no topo: na demo só Vale Verde tem dados, então os outros avisam e voltam.
+    const cs = e.target.closest("[data-cliente]");
+    if (cs) {
+      const atual = S.cliente.nome.replace("Prefeitura de ", "");
+      if (cs.value !== atual) { toast(`Na demo, só ${atual} tem dados.`); cs.value = atual; }
+      return;
+    }
     const up = e.target.closest("[data-upload]");
     if (!up || !up.files[0]) return;
     const t = findTask(up.dataset.upload);
