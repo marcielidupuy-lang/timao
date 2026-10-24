@@ -533,6 +533,10 @@ button.kpi:hover .go { color: var(--ink); transform: translateX(2px); }
 .split-l .kpis { grid-template-columns: repeat(2, 1fr); }
 .split-l .reu-grid { grid-template-columns: minmax(0, 1fr); }
 .split-r { position: sticky; top: 76px; }
+/* Visão geral do implantador: cards numa linha só em cima; o chat começa na altura de Próximas reuniões */
+.vg-kpis .kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.vg-split { margin-top: 28px; }
+.vg-split .split-l > .block-sm:first-child { margin-top: 0; }
 .chat-card { border: 1px solid var(--line); border-radius: 16px; background: #fff; padding: 20px; min-height: calc(100vh - 110px); display: flex; flex-direction: column; }
 .chat-card .ask-h { text-align: left; font-size: 18px; margin-bottom: 14px; }
 .chat-card .ai { flex: 1; display: flex; flex-direction: column; }

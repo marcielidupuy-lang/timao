@@ -650,9 +650,10 @@
     const sd = saudeVV();
     return `<section class="phead entry vg-head"><h1>${esc(c.nome)}.<span>${ativa() ? esc(ativa().nome) + " em andamento" : "Implantação da prefeitura toda."}</span></h1>
         <p><span class="saude ${sd}">${SAUDE[sd]}</span><span class="sep">·</span>${c.secretarias} secretarias · ${c.processos} processos · champion ${esc(c.champion)} · Pylon ${esc(c.pylon)}</p></section>` +
-      `<div class="split">
+      // Os 4 cards lado a lado em cima; embaixo, reuniões e agente à esquerda e o chat à direita, na mesma altura.
+      `<div class="vg-kpis">${kpisHTML("i")}</div>
+      <div class="split vg-split">
         <div class="split-l">
-          ${kpisHTML("i")}
           <div class="block-sm">${secTitle("Próximas reuniões", "", `<a class="more" href="#/i/agenda">Agenda ${I.right}</a>`)}<div class="reu-grid">${prox.slice(0, 2).map((r) => reuniaoHTML(r, false)).join("") || `<p class="empty">Nenhuma reunião marcada.</p>`}</div></div>
           <div class="block-sm"><section class="card"><div class="card-h"><h3>Agente em ação</h3><span class="live"><span class="dot"></span>ao vivo</span></div>${feedHTML(5)}<a class="more" href="#/i/agente">Execuções do agente ${I.right}</a></section></div>
         </div>
