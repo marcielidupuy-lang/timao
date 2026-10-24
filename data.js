@@ -13,7 +13,8 @@ window.DATA = {
     processos: 98,
     pylon: "PYL-4821",
     horasReuniaoEvitadas: 31,
-    contato: "Ana"
+    contato: "Ana",
+    saude: "risco"
   },
 
   // Outras implantações da mesma implantadora (só o resumo, para a carteira).

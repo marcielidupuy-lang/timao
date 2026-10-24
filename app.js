@@ -329,7 +329,7 @@
   const VIEWS = {};
   VIEWS["i/carteira"] = () => {
     const c = S.cliente;
-    const vv = { nome: c.nome.replace("Prefeitura de ", ""), uf: c.uf, fase: `${ativa() ? ativa().nome : ""} · Obras`, pct: entrega(), atrasadas: semResposta().length, videos: vidsPend().length, ajustes: ajustes().length, proxima: proxReunioes()[0] && proxReunioes()[0].data, saude: semResposta().length ? "atencao" : "ok", aberta: true };
+    const vv = { nome: c.nome.replace("Prefeitura de ", ""), uf: c.uf, fase: `${ativa() ? ativa().nome : ""} · Obras`, pct: entrega(), atrasadas: semResposta().length, videos: vidsPend().length, ajustes: ajustes().length, proxima: proxReunioes()[0] && proxReunioes()[0].data, saude: window.DATA.cliente.saude || (semResposta().length ? "atencao" : "ok"), aberta: true };
     const todas = [vv, ...S.carteira];
     const atencao = todas.filter((p) => p.saude !== "ok").length;
     const sum = (k) => todas.reduce((a, p) => a + p[k], 0);
