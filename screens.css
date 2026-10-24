@@ -212,6 +212,8 @@
 .phead h1 span { color: var(--faint); font-weight: 600; margin-left: 8px; }
 .phead p { color: var(--muted); font-size: 13px; margin-top: 2px; }
 .phead + .block-sm, .phead + .sec-title { margin-top: 8px; }
+.phead.entry h1 { font-size: 26px; letter-spacing: -.7px; }
+.phead + .kpis { margin-top: 4px; }
 .big-h { margin: 22px 0 18px; text-align: left; }
 .big-h .eyebrow { display: none; }
 .big-h h2 { font-size: 22px; letter-spacing: -.5px; }

@@ -194,9 +194,8 @@
 
   // ---------- peças reaproveitadas ----------
   const ENTRADA = ["carteira", "visao", "inicio"];
-  const hero = (eyebrow, h1, sub, meta) => !ENTRADA.includes(PAGE)
-    ? `<section class="phead"><h1>${h1}<span>${sub}</span></h1>${meta ? `<p>${meta}</p>` : ""}</section>`
-    : `<section class="hero"><p class="eyebrow"><span class="dot-c"></span>${eyebrow}</p><h1>${h1}<span>${sub}</span></h1>${meta ? `<p class="hero-meta">${meta}</p>` : ""}</section>`;
+  const hero = (eyebrow, h1, sub, meta) =>
+    `<section class="phead ${ENTRADA.includes(PAGE) ? "entry" : ""}"><h1>${h1}<span>${sub}</span></h1>${meta ? `<p>${meta}</p>` : ""}</section>`;
   const secTitle = (t, hint = "", extra = "") => `<div class="sec-title"><h2>${t}</h2>${hint ? `<span class="hint">${hint}</span>` : ""}${extra}</div>`;
   // Com `act`, o card vira botão e abre o detalhe do indicador (data-kpi).
   const kpi = (k, v, s, cls = "", bar, act) => {
