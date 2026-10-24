@@ -1097,26 +1097,30 @@
     const nx = sl && sl.nextElementSibling;
     if (nx) $("#reel").scrollTo({ top: nx.offsetTop, behavior: "smooth" });
   }
-  function showSlots(sl, onPick) {
+  // A pessoa escolhe o dia e o horário da reunião (não há mais horários sugeridos).
+  function showSlots(sl, onPick, { titulo = "Agendar conversa", botao = "Solicitar reunião" } = {}) {
     const old = $(".slots", sl);
     if (old) { old.remove(); return; }
-    const base = now();
-    const opts = [1, 2, 3].map((k) => {
-      const x = new Date(base); x.setDate(x.getDate() + k + (x.getDay() === 5 ? 2 : 0)); x.setHours([10, 14, 16][k - 1], 0, 0, 0);
-      return x;
-    });
+    const amanha = new Date(now()); amanha.setDate(amanha.getDate() + 1);
     const box = document.createElement("div");
     box.className = "slots";
-    box.innerHTML = `<h5>Escolha um horário</h5>${opts.map((o) => `<button data-iso="${o.toISOString()}">${o.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" })} · ${o.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</button>`).join("")}`;
+    box.innerHTML = `<form class="slot-f"><h5>${titulo}</h5>
+      <label><span>Dia</span><input type="date" name="dia" min="${ymd(now())}" value="${ymd(amanha)}" required></label>
+      <label><span>Horário</span><input type="time" name="hora" value="10:00" step="900" required></label>
+      <p class="slot-err" hidden>Escolha um dia e horário a partir de agora.</p>
+      <div class="slot-b"><button type="button" class="btn sm ghost" data-slotx="1">Cancelar</button><button type="submit" class="btn sm">${botao}</button></div></form>`;
     sl.appendChild(box);
     box.addEventListener("click", (e) => {
-      const b = e.target.closest("button");
-      if (!b) return;
       e.stopPropagation();
-      const w = new Date(b.dataset.iso);
-      const p = (x) => String(x).padStart(2, "0");
+      if (e.target.closest("[data-slotx]")) box.remove();
+    });
+    $("form", box).addEventListener("submit", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const f = e.target, iso = `${f.dia.value}T${f.hora.value}`;
+      if (!f.dia.value || !f.hora.value || d(iso) < now()) { $(".slot-err", box).hidden = false; return; }
       box.remove();
-      onPick(`${w.getFullYear()}-${p(w.getMonth() + 1)}-${p(w.getDate())}T${p(w.getHours())}:00`);
+      onPick(iso);
     });
   }
 
@@ -1367,6 +1371,13 @@
       editou(`Link "${l.titulo}" removido do painel da prefeitura`);
       return;
     }
+    // Player: clicar fora do vídeo (no fundo, fora dos botões e do chat) fecha. Se a caixa de
+    // agendar estiver aberta, o primeiro clique fora fecha só ela.
+    if (!$("#player").hidden && (e.target.id === "player" || e.target.matches("#reel, .slide, .stage, .vidwrap, .stage .who"))) {
+      const sl = $("#player .slots");
+      if (sl) sl.remove(); else closePlayer();
+      return;
+    }
     if (e.target.id === "scrim") { closeDrawer(); return; }
     if (el("[data-ajuda]")) {
       AJUDA = true;
@@ -1458,7 +1469,7 @@
         r.data = iso; r.presenca = true;
         log("agenda", `Reunião "${r.titulo}" remarcada para ${dia(iso)} às ${hora(iso)} a pedido da prefeitura`);
         save(); toast(`Remarcada para ${dia(iso)} às ${hora(iso)}.`); refresh();
-      });
+      }, { titulo: "Remarcar reunião", botao: "Remarcar" });
       return;
     }
     if (el("[data-novareuniao]")) {
@@ -1497,7 +1508,7 @@
       if (x.dataset.act === "cal") showSlots(sl, (iso) => {
         S.reunioes.push({ id: "r" + Date.now(), titulo: `Conversa rápida · ${v.processo}`, data: iso, secretaria: v.secretaria, status: "agendada", confirmacao: "Agente confirma no WhatsApp um dia antes", pauta: [`Dúvidas sobre o vídeo do ${v.processo}`, ...v.alteracoes] });
         log("agenda", `Conversa de 15 min sobre o ${v.processo} agendada para ${dia(iso)} às ${hora(iso)}. Pauta montada com as alterações do vídeo`);
-        save(); toast(`Agendado: ${dia(iso)} às ${hora(iso)}. Convite enviado no WhatsApp.`);
+        save(); toast(`Reunião solicitada para ${dia(iso)} às ${hora(iso)}. Convite enviado no WhatsApp.`);
       });
     }
   });
