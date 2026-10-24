@@ -696,13 +696,13 @@
   let CAL = null;
   function eventosAgenda() {
     const ev = [];
-    S.reunioes.forEach((r) => ev.push({ iso: r.data, tipo: "reuniao", t: r.titulo, s: `${hora(r.data)} · ${r.secretaria}${r.status === "realizada" ? " · realizada" : r.presenca ? " · presença confirmada" : ""}`, feito: r.status === "realizada" }));
+    S.reunioes.forEach((r) => ev.push({ iso: r.data, tipo: "reuniao", t: r.titulo, s: `${hora(r.data)} · ${r.secretaria}${r.status === "realizada" ? " · realizada" : r.presenca ? " · presença confirmada" : ""}`, feito: r.status === "realizada", reu: r }));
     Object.values(window.DATA.escopo || {}).flat().forEach((x) => {
       const late = x.status !== "entregue" && d(x.prazo + "T23:59") < now();
       ev.push({ iso: x.prazo + "T09:00", tipo: /^go-live/i.test(x.t) ? "golive" : "entrega", t: x.t, s: x.status === "entregue" ? "entregue" : late ? "atrasada" : x.d, feito: x.status === "entregue", late });
     });
     allTasks().filter((t) => ROLE === "i" || (t.dono === "prefeitura" && visivel(t))).forEach((t) =>
-      ev.push({ iso: t.data, tipo: t.dono === "prefeitura" ? "tarefa" : "aprova", t: t.titulo, s: t.feito ? "feito" : isLate(t) ? `atrasada desde ${dia(t.data)}` : `até ${hora(t.data)}`, feito: t.feito, late: isLate(t) }));
+      ev.push({ iso: t.data, tipo: t.dono === "prefeitura" ? "tarefa" : "aprova", t: t.titulo, s: t.feito ? "feito" : isLate(t) ? `atrasada desde ${dia(t.data)}` : `até ${hora(t.data)}`, feito: t.feito, late: isLate(t), task: t }));
     return ev.sort((a, b) => d(a.iso) - d(b.iso));
   }
   const evClasse = (e) => `${e.late ? "late" : e.tipo}${e.feito ? " feito" : ""}`;
@@ -717,26 +717,44 @@
     const cel = Array.from({ length: semanas * 7 }, (_, i) => {
       const x = new Date(CAL.y, CAL.m, 1 - first.getDay() + i), k = ymd(x), lista = porDia[k] || [];
       return `<button type="button" class="cal-d ${x.getMonth() !== CAL.m ? "out" : ""} ${k === hoje ? "today" : ""} ${k === CAL.sel ? "sel" : ""}" data-caldia="${k}" aria-label="${diaSem(k + "T12:00")}${lista.length ? `, ${lista.length} evento${lista.length > 1 ? "s" : ""}` : ""}">
-        <span class="n">${x.getDate()}</span><span class="cal-evs">${lista.slice(0, 3).map((e) => `<i class="ev ${evClasse(e)}">${esc(e.t)}</i>`).join("")}${lista.length > 3 ? `<i class="mais">+${lista.length - 3}</i>` : ""}</span></button>`;
+        <span class="n">${x.getDate()}</span><span class="cal-evs">${lista.slice(0, 4).map((e) => `<i class="ev ${evClasse(e)}">${e.tipo === "reuniao" ? `<em>${hora(e.iso)}</em>` : ""}${esc(e.t)}</i>`).join("")}${lista.length > 4 ? `<i class="mais">+${lista.length - 4} mais</i>` : ""}</span></button>`;
     }).join("");
-    const doDia = porDia[CAL.sel] || [];
-    const prox = ev.filter((e) => !e.feito && d(e.iso) >= d(hoje + "T00:00")).slice(0, 6);
-    const atras = ev.filter((e) => e.late);
+    // Só o calendário, grande; o que tem em cada dia abre num modal no meio da tela.
     return hero("Agenda", "Agenda.", "Entregas, reuniões e prazos.", "Tudo que tem data na implantação, num lugar só. Clique num dia para ver o que tem nele.") +
-      `<div class="grid ag-grid"><div class="col-main">
+      `<div class="ag-full">
         <div class="cal-h"><h2>${first.toLocaleDateString("pt-BR", { month: "long", year: "numeric" }).replace(/^./, (l) => l.toUpperCase())}</h2>
           <button class="btn sm ghost" data-calmes="-1" aria-label="Mês anterior">‹</button><button class="btn sm ghost" data-calhoje="1">Hoje</button><button class="btn sm ghost" data-calmes="1" aria-label="Próximo mês">›</button></div>
         <div class="cal"><div class="cal-w">${["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((w) => `<span>${w}</span>`).join("")}</div><div class="cal-g">${cel}</div></div>
         <div class="cal-leg">${Object.keys(TIPOS).filter((k) => ROLE === "i" || k !== "aprova").map((k) => `<span class="${k}">${tipoNome(k)}</span>`).join("")}</div>
-      </div>
-      <aside class="col-side">
-        <section class="card"><div class="card-h"><h3>${diaSem(CAL.sel + "T12:00")}</h3></div>
-          ${doDia.length ? `<ul class="ag-list">${doDia.map((e) => evLinha(e)).join("")}</ul>` : `<p class="empty">Nada marcado neste dia.</p>`}</section>
-        ${atras.length ? `<section class="card"><div class="card-h"><h3>Atrasado</h3></div><ul class="ag-list">${atras.map((e) => evLinha(e, true)).join("")}</ul></section>` : ""}
-        <section class="card"><div class="card-h"><h3>Próximas datas</h3></div>
-          ${prox.length ? `<ul class="ag-list">${prox.map((e) => evLinha(e, true)).join("")}</ul>` : `<p class="empty">Nada pela frente.</p>`}</section>
-      </aside></div>`;
+      </div>`;
   };
+
+  // Modal do dia: reuniões com pauta e botões, tarefas com Enviar/Feito, entregas com a situação.
+  function diaHTML(k) {
+    const ev = eventosAgenda().filter((e) => e.iso.slice(0, 10) === k);
+    const titulo = diaSem(k + "T12:00").replace(/^./, (l) => l.toUpperCase());
+    const item = (e) => {
+      if (e.reu) return `<div class="md-reu"><span class="ag-k reuniao">${tipoNome("reuniao")}</span>${reuniaoHTML(e.reu)}</div>`;
+      const t = e.task, pode = t && !t.feito && (ROLE === "i" ? t.dono !== "prefeitura" : t.dono === "prefeitura");
+      const acoes = pode ? `<div class="qa">${/enviar|devolver/i.test(t.titulo) ? `<label class="btn sm">${I.upload}Enviar<input type="file" hidden data-upload="${t.id}"></label>` : ""}<button class="btn sm ghost" data-task="${t.id}">Feito</button></div>`
+        : e.feito ? `<span class="ok-note">${I.check}${e.tipo === "entrega" || e.tipo === "golive" ? "Entregue" : "Feito"}</span>` : "";
+      return `<div class="md-item ${e.late ? "late" : ""}"><span class="ag-dot ${evClasse(e)}"></span><div class="ag-t"><span class="ag-k ${evClasse(e)}">${e.late ? "Atrasado" : tipoNome(e.tipo)}</span><b>${esc(e.t)}</b><small>${esc(e.s)}</small></div>${acoes}</div>`;
+    };
+    return `<div class="md-h"><div><h3>${titulo}</h3><p>${ev.length ? `${ev.length} ${ev.length > 1 ? "coisas" : "coisa"} neste dia` : "Nada marcado neste dia."}</p></div><button class="dr-x" data-mdclose="1" aria-label="Fechar">${I.x}</button></div>
+      <div class="md-list">${ev.map(item).join("") || `<p class="empty">Escolha outro dia no calendário.</p>`}</div>`;
+  }
+  function openDia(k) {
+    CAL.open = k;
+    $("#modal .modal-card").innerHTML = diaHTML(k);
+    $("#modal").hidden = false;
+    requestAnimationFrame(() => $("#modal").classList.add("on"));
+  }
+  function closeModal() {
+    if (CAL) CAL.open = null;
+    const m = $("#modal");
+    m.classList.remove("on");
+    setTimeout(() => { if (!CAL || !CAL.open) m.hidden = true; }, 200);
+  }
 
   VIEWS["i/agenda"] = () => VIEWS["c/agenda"]();
 
@@ -772,22 +790,22 @@
     const envio = (t) => /enviar|devolver/i.test(t.titulo);
     const nomeEnvio = (t) => "Enviar: " + t.titulo.replace(/^(enviar|devolver)\s+(.)/i, (m, v, l) => l.toUpperCase());
     const minhas = doCliente().filter(visivel).sort((a, b) => d(a.data) - d(b.data));
+    // sub é a linha curta embaixo do título; tone é a cor do ícone.
     const atrasadas = minhas.filter(isLate).map((t) => envio(t)
-      ? { t: nomeEnvio(t), d: `Atrasado desde ${dia(t.data)}. A Aprova identifica a pendência e dá baixa.`, acao: "anexar", hot: true }
-      : { t: t.titulo, d: `Atrasada desde ${dia(t.data)}.`, msg: `Quero resolver: ${t.titulo}`, hot: true });
+      ? { ic: "upload", tone: "red", t: nomeEnvio(t), sub: `Atrasado desde ${dia(t.data)}`, d: "A Aprova identifica a pendência e dá baixa.", acao: "anexar", hot: true }
+      : { ic: "clock", tone: "red", t: t.titulo, sub: `Atrasada desde ${dia(t.data)}`, d: "Fale com a Aprova sobre esta pendência.", msg: `Quero resolver: ${t.titulo}`, hot: true });
     const doc = minhas.find((t) => envio(t) && !isLate(t));
     return {
       compacto: true,
-      saudacao: `Oi, ${esc(S.cliente.contato)}! Clique num atalho ou escreva aqui. Pode mandar texto, áudio ou anexo.`,
-      placeholder: "Escreva para a Aprova…",
+      placeholder: "Escreva para a Aprova: texto, áudio ou anexo…",
       sugs: [
         ...atrasadas,
-        ...(PN().blocos.validacoes && vids ? [{ t: "Validar processos", d: `${vids} vídeo${vids > 1 ? "s esperam" : " espera"} a sua aprovação.`, msg: "Validar processos" }] : []),
-        doc ? { t: nomeEnvio(doc), d: `Até ${dia(doc.data)}. A Aprova identifica a pendência e dá baixa.`, acao: "anexar" }
-          : { t: "Enviar um documento", d: "Lei, foto ou planilha. A Aprova identifica a pendência e dá baixa.", acao: "anexar" },
-        { t: "Alterar um formulário", d: "Diga o que muda. Pode mandar PDF, foto ou áudio.", msg: "Quero alterar um formulário" },
-        { t: "Cadastrar minha equipe", d: "Envia o link de cadastro no WhatsApp.", msg: "Cadastro de usuários" },
-        { t: "Próximo passo e prazos", d: "O que vem agora e quando é o go-live.", msg: "Qual o próximo passo e o prazo?" }
+        ...(PN().blocos.validacoes && vids ? [{ ic: "video", tone: "cyan", t: "Validar processos", sub: `${vids} vídeo${vids > 1 ? "s esperam" : " espera"} você`, d: "Abre os vídeos que esperam a sua aprovação.", msg: "Validar processos" }] : []),
+        doc ? { ic: "upload", tone: "amber", t: nomeEnvio(doc), sub: `Até ${dia(doc.data)}`, d: "A Aprova identifica a pendência e dá baixa.", acao: "anexar" }
+          : { ic: "upload", tone: "amber", t: "Enviar um documento", sub: "Lei, foto ou planilha", d: "A Aprova identifica a pendência e dá baixa.", acao: "anexar" },
+        { ic: "form", tone: "ink", t: "Alterar um formulário", sub: "Diga o que muda", d: "Pode mandar PDF, foto ou áudio.", msg: "Quero alterar um formulário" },
+        { ic: "users", tone: "green", t: "Cadastrar minha equipe", sub: "Link no WhatsApp", d: "Envia o link de cadastro no WhatsApp.", msg: "Cadastro de usuários" },
+        { ic: "cal", tone: "cyan", t: "Próximo passo e prazos", sub: `Go-live em ${dia(S.cliente.meta + "T09:00")}`, d: "O que vem agora e quando é o go-live.", msg: "Qual o próximo passo e o prazo?" }
       ]
     };
   }
@@ -797,15 +815,16 @@
     render();
     window.scrollTo(0, y);
     if (INFO) renderInfo();
+    if (CAL && CAL.open) $("#modal .modal-card").innerHTML = diaHTML(CAL.open);
   }
 
   // ---------- ai.aprova (simulado na demo; em produção é o agente) ----------
   function aiBox({ placeholder, sugs = [], ctx = null, compacto = false, saudacao = "" }) {
     const box = document.createElement("div");
     box.className = compacto ? "ai compacto" : "ai";
-    // Compacto: atalhos pequenos com seta numa coluna e o chat ao lado; a descrição vai no title.
+    // Compacto: atalhos pequenos (ícone, título, linha curta e seta pro chat) numa coluna, o chat ao lado.
     const sugHTML = (s) => compacto
-      ? `<button type="button" class="sug ${s.hot ? "hot" : ""}" data-msg="${esc(s.msg || s.t)}"${s.acao ? ` data-acao="${s.acao}"` : ""} title="${esc(s.d)}"><b>${esc(s.t)}</b>${s.hot ? `<span class="late-chip">atrasado</span>` : ""}<span class="arr">${I.right}</span></button>`
+      ? `<button type="button" class="sug tone-${s.tone || "ink"} ${s.hot ? "hot" : ""}" data-msg="${esc(s.msg || s.t)}"${s.acao ? ` data-acao="${s.acao}"` : ""} title="${esc(s.d)}"><span class="sg-ic">${I[s.ic]}</span><span class="sg-t"><b>${esc(s.t)}</b>${s.sub ? `<small>${esc(s.sub)}</small>` : ""}</span><span class="arr">${I.right}</span></button>`
       : `<button type="button" class="sug" data-msg="${esc(s.msg || s.t)}">${I[s.ic]}<b>${esc(s.t)}</b><span>${esc(s.d)}</span></button>`;
     const sugsHTML = sugs.length ? `<ul class="sugs">${sugs.map((s) => `<li>${sugHTML(s)}</li>`).join("")}</ul>` : "";
     box.innerHTML = (compacto ? `${sugsHTML}<div class="ai-chat">` : "") + `<div class="ai-log"></div>
@@ -1333,12 +1352,16 @@
     }
     if (el("[data-calhoje]")) { CAL = null; refresh(); return; }
     if ((x = el("[data-caldia]"))) {
-      // Dia de outro mês na grade: o calendário vai pra esse mês.
+      // Dia de outro mês na grade: o calendário vai pra esse mês. O dia abre no modal.
       const s = d(x.dataset.caldia + "T12:00");
       CAL = { y: s.getFullYear(), m: s.getMonth(), sel: x.dataset.caldia };
       refresh();
+      openDia(x.dataset.caldia);
       return;
     }
+    if (e.target.id === "modal" || el("[data-mdclose]")) { closeModal(); return; }
+    // A aba Validações da prefeitura sempre abre no que está "Aguardando você".
+    if (el('a[href="#/c/validacoes"]')) { filtro = "pendente"; if (location.hash === "#/c/validacoes") refresh(); }
     if ((x = el("[data-kpi]"))) {
       // No implantador, "Com a prefeitura" leva à fila; o resto abre o detalhe na lateral.
       if (x.dataset.kpi === "pend" && ROLE === "i") { go("i", "fila"); return; }
@@ -1465,7 +1488,8 @@
   $("#closePlayer").addEventListener("click", closePlayer);
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
-    if (!$("#player").hidden) closePlayer();
+    if (!$("#modal").hidden) closeModal();
+    else if (!$("#player").hidden) closePlayer();
     else if (!$("#drawer").hidden) closeDrawer();
   });
   $("#reset").addEventListener("click", () => {
@@ -1474,11 +1498,18 @@
     render();
     toast("Demo reiniciada.");
   });
-  window.addEventListener("hashchange", () => { parseHash(); render(); window.scrollTo(0, 0); });
+  window.addEventListener("hashchange", () => {
+    parseHash();
+    if (ROLE === "c" && PAGE === "validacoes") filtro = "pendente";
+    if (CAL && CAL.open) closeModal();
+    render();
+    window.scrollTo(0, 0);
+  });
 
   // ---------- início ----------
-  document.body.insertAdjacentHTML("beforeend", '<div class="scrim" id="scrim" hidden></div>');
+  document.body.insertAdjacentHTML("beforeend", '<div class="scrim" id="scrim" hidden></div><div class="modal" id="modal" hidden><div class="modal-card" role="dialog" aria-modal="true" aria-label="O que tem neste dia"></div></div>');
   parseHash();
+  if (ROLE === "c" && PAGE === "validacoes") filtro = "pendente";
   if (!location.hash) history.replaceState(null, "", `#/${ROLE}/${PAGE}`);
   render();
   tickSync();
