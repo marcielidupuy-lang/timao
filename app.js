@@ -354,19 +354,26 @@
         </div>`).join("")}</div></div>`;
   };
 
-  VIEWS["i/visao"] = () => {
+  // Indicadores da implantação: os mesmos nas duas visões, só muda quem é "a prefeitura"
+  function kpisHTML(lado) {
     const c = S.cliente;
     const pct = entrega();
+    const pend = doCliente().length + vidsPend().length;
+    return `<section class="kpis">
+        ${kpi("Entrega", pct + "%", "", "", pct)}
+        ${kpi(lado === "c" ? "Com você" : "Com a prefeitura", pend, "tarefas e vídeos", pend ? "alert" : "good")}
+        ${kpi("Reunião evitada", c.horasReuniaoEvitadas + "h", "validação por vídeo", "good")}
+        ${kpi("Go-live", daysUntil(c.meta + "T09:00") + " dias", "meta " + dia(c.meta + "T09:00"))}
+      </section>`;
+  }
+
+  VIEWS["i/visao"] = () => {
+    const c = S.cliente;
     const fila = filaItems().slice(0, 4);
     const prox = proxReunioes();
     return hero(`${ativa() ? ativa().nome + " em andamento" : "Implantação"}`, `${esc(c.nome)}.`, "Implantação da prefeitura toda.", `${c.secretarias} secretarias · ${c.processos} processos · champion ${esc(c.champion)} · Pylon ${esc(c.pylon)}`) +
-      `<section class="kpis">
-        ${kpi("Entrega", pct + "%", "", "", pct)}
-        ${kpi("Com a prefeitura", doCliente().length + vidsPend().length, "tarefas e vídeos", doCliente().length + vidsPend().length ? "alert" : "good")}
-        ${kpi("Reunião evitada", c.horasReuniaoEvitadas + "h", "validação por vídeo", "good")}
-        ${kpi("Go-live", daysUntil(c.meta + "T09:00") + " dias", "meta " + dia(c.meta + "T09:00"))}
-      </section>
-      <section class="ask"><h2 class="ask-h">O que o agente faz por você agora?</h2><div data-ai="i"></div></section>
+      kpisHTML("i") +
+      `<section class="ask"><h2 class="ask-h">O que o agente faz por você agora?</h2><div data-ai="i"></div></section>
       <div class="grid">
         <div class="col-main">
           ${secTitle("Sua fila", `${filaItems().length} itens`, `<a class="more" href="#/i/fila">Ver tudo ${I.right}</a>`)}
@@ -441,6 +448,7 @@
       ...tarefas.map((t) => `<div class="todo ${isLate(t) ? "late" : ""}"><span class="qi ${isLate(t) ? "red" : "amber"}">${I.clipboard}</span><div class="qt"><b>${esc(t.titulo)}</b><span>${isLate(t) ? `Atrasada desde ${dia(t.data)}` : `Até ${dia(t.data)} às ${hora(t.data)}`}</span></div><div class="qa">${/enviar|devolver/i.test(t.titulo) ? `<label class="btn sm">${I.upload}Enviar<input type="file" hidden data-upload="${t.id}"></label>` : ""}<button class="btn sm ghost" data-task="${t.id}">Feito</button></div></div>`)
     ];
     return hero(c.nome, `Olá, ${esc(c.contato)}.`, n ? `${n} coisa${n > 1 ? "s" : ""} depende${n > 1 ? "m" : ""} de você.` : "Nada depende de você hoje.", "") +
+      kpisHTML("c") +
       `<div class="grid"><div class="col-main">
           ${secTitle("Para fazer", "o resto a Aprova resolve")}
           <div class="queue">${todo.join("") || `<p class="empty">Tudo em dia 🎉</p>`}</div>
