@@ -233,3 +233,7 @@ window.DATA = {
     { hora: "2026-10-09T10:00", gatilho: "reuniao", texto: "Fim da reunião da Fase 1: 4 acionáveis criados e ticket #18310 preenchido" }
   ]
 };
+
+// WhatsApp da demo: DDI + DDD + número, só dígitos (ex.: "5511999998888").
+// Vazio, o WhatsApp abre e pede pra escolher o contato.
+window.WHATSAPP = "";

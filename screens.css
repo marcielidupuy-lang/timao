@@ -512,3 +512,8 @@ body.editing .app { margin-right: 360px; }
 .split-l .qa { width: 100%; padding-left: 48px; }
 .chat-card .sug { flex-wrap: wrap; gap: 2px 12px; }
 .chat-card .sug span { flex-basis: 100%; padding-left: 31px; }
+
+/* botão de WhatsApp com a mensagem pronta */
+.btn.wa { background: #1fa855; color: #fff; border: 0; }
+.btn.wa:hover { background: #188f47; }
+.msg .btn.wa { margin-top: 4px; }
