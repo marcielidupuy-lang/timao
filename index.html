@@ -7,83 +7,101 @@
 <meta name="description" content="Painel único da implantação: fases, tarefas, reuniões, vídeos de validação e o agente ai.aprova.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=3">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=7">
 </head>
 <body>
 
-<header class="top">
-  <div class="top-in">
-    <div class="brand">
-      <span class="logo">aprova</span>
-      <span class="brand-sub">implantação</span>
+<div class="app">
+  <nav class="rail" aria-label="Módulos">
+    <a class="rail-logo" href="#topo" aria-label="Aprova"><svg viewBox="0 0 40 40" class="logo-a"><path d="M10 33L20 8l10 25" stroke="#111" stroke-width="3.4" fill="none"/><path d="M2 22h36" stroke="#14c3d6" stroke-width="3.2"/></svg></a>
+    <div class="rail-icons" id="railIcons"></div>
+    <div class="rail-foot">
+      <span class="rail-btn" id="railBell"></span>
+      <span class="avatar">MD</span>
     </div>
-    <div class="client" id="client"></div>
-    <div class="top-right">
-      <span class="sync" id="sync" title="Tudo que muda aqui é gravado no Pylon"><span class="dot"></span><span id="syncTxt">Pylon sincronizado</span></span>
-      <span class="clock" id="clock"></span>
+  </nav>
+
+  <aside class="nav2" aria-label="Implantação">
+    <div class="nav2-top">
+      <a class="nav2-item" href="#topo"><span class="ni" data-ic="home"></span>Visão geral</a>
+      <a class="nav2-item" href="#validacoes-sec"><span class="ni" data-ic="video"></span>Validações</a>
+      <a class="nav2-item" href="#reunioes-card"><span class="ni" data-ic="meet"></span>Reuniões</a>
+      <a class="nav2-item" href="#usuarios-card"><span class="ni" data-ic="users"></span>Usuários</a>
+      <a class="nav2-item" href="https://github.com/marcielidupuy-lang/timao/tree/main/INSTRUCTIONS" target="_blank" rel="noopener"><span class="ni" data-ic="bolt"></span>Instruções do agente</a>
     </div>
-  </div>
-</header>
+    <div class="nav2-label">Minhas implantações</div>
+    <div id="implantacoes"></div>
+  </aside>
 
-<main class="wrap">
-  <section class="kpis" id="kpis" aria-label="Indicadores"></section>
-
-  <div class="grid">
-    <div class="col-main">
-      <div id="fases"></div>
-
-      <section class="card" id="reunioes-card">
-        <div class="card-h">
-          <h2>Reuniões e acionáveis</h2>
-          <span class="hint">o agente executa os acionáveis quando a reunião termina</span>
-        </div>
-        <div id="reunioes"></div>
-      </section>
+  <main class="content" id="topo">
+    <div class="topbar">
+      <a class="m-logo" href="#topo" aria-label="Aprova"><svg viewBox="0 0 40 40" class="logo-a"><path d="M10 33L20 8l10 25" stroke="#111" stroke-width="3.4" fill="none"/><path d="M2 22h36" stroke="#14c3d6" stroke-width="3.2"/></svg></a>
+      <div class="crumb"><span>Implantação</span><span class="sep">/</span><b id="crumbName"></b></div>
+      <span class="conn" id="sync" title="Tudo que muda aqui é gravado no Pylon"><span class="dot"></span><span id="syncTxt">Pylon conectado</span></span>
     </div>
 
-    <aside class="col-side">
-      <section class="card help">
-        <h2 class="help-h">Precisa de ajuda?</h2>
-        <p class="help-sub">Fale com o <b>ai.aprova</b>: mande texto, áudio, PDF da lei ou foto do formulário.</p>
-        <div id="helpAi"></div>
-      </section>
+    <section class="hero">
+      <p class="eyebrow"><span class="dot-c"></span><span id="eyebrow"></span></p>
+      <h1 id="heroTitle"></h1>
+      <p class="hero-meta" id="heroMeta"></p>
+    </section>
 
-      <section class="card checklist">
-        <div class="card-h"><h2>Checklist diário</h2><span class="hint">o que depende da prefeitura</span></div>
-        <ul id="checklist"></ul>
-      </section>
+    <section class="kpis" id="kpis" aria-label="Indicadores"></section>
 
-      <section class="card feed">
-        <div class="card-h"><h2>Agente em ação</h2><span class="live"><span class="dot"></span>ao vivo</span></div>
-        <ol id="feed"></ol>
-      </section>
-    </aside>
-  </div>
+    <section class="ask">
+      <h2 class="ask-h">Por onde começamos?</h2>
+      <div id="helpAi"></div>
+    </section>
 
-  <section class="validacoes" id="validacoes-sec">
-    <div class="sec-h">
-      <h2>Painel das Validações</h2>
-      <p>Cada ajuste feito pelo agente vira um vídeo curto. A prefeitura assiste, aprova ou pede mudança ali mesmo, sem reunião.</p>
-      <div class="filters" id="filters" role="tablist"></div>
+    <div class="grid">
+      <div class="col-main">
+        <div class="sec-title"><h2>Fases da implantação</h2><span class="hint" id="fasesHint"></span></div>
+        <div id="fases"></div>
+      </div>
+
+      <aside class="col-side">
+        <section class="card">
+          <div class="card-h"><h3>Checklist diário</h3><span class="hint">o que depende da prefeitura</span></div>
+          <ul class="checklist" id="checklist"></ul>
+        </section>
+        <section class="card">
+          <div class="card-h"><h3>Agente em ação</h3><span class="live"><span class="dot"></span>ao vivo</span></div>
+          <ol class="feed" id="feed"></ol>
+        </section>
+      </aside>
     </div>
-    <div class="vgrid" id="vgrid"></div>
-  </section>
 
-  <section class="card usuarios">
-    <div class="card-h">
-      <h2>Usuários da prefeitura</h2>
-      <button class="btn" id="convidar">Enviar link de cadastro no WhatsApp</button>
-    </div>
-    <p class="hint block">O agente manda o link, a pessoa preenche os dados e ele cadastra no prefeitura.aprova.</p>
-    <div class="tbl-wrap"><table id="usuarios"></table></div>
-  </section>
+    <section class="block" id="reunioes-card">
+      <div class="sec-title"><h2>Reuniões e acionáveis</h2><span class="hint">o agente executa os acionáveis quando a reunião termina</span></div>
+      <div class="reu-grid" id="reunioes"></div>
+    </section>
 
-  <footer class="foot">
-    <span>Timão · Hackathon Aprova 2026 · dados fictícios</span>
-    <button class="link" id="reset">Reiniciar demo</button>
-  </footer>
-</main>
+    <section class="block" id="validacoes-sec">
+      <div class="big-h">
+        <p class="eyebrow"><span class="dot-c"></span>Painel das Validações</p>
+        <h2>Cada ajuste vira um vídeo.<span>Aprovado sem reunião.</span></h2>
+        <p class="lead">A prefeitura assiste, aprova com um toque ou pede mudança ali mesmo.</p>
+        <div class="filters" id="filters" role="tablist"></div>
+      </div>
+      <div class="vgrid" id="vgrid"></div>
+    </section>
+
+    <section class="block" id="usuarios-card">
+      <div class="sec-title">
+        <h2>Usuários da prefeitura</h2>
+        <button class="btn" id="convidar">Enviar link de cadastro no WhatsApp</button>
+      </div>
+      <p class="hint block">O agente manda o link, a pessoa preenche os dados e ele cadastra no prefeitura.aprova.</p>
+      <div class="card flush"><div class="tbl-wrap"><table id="usuarios"></table></div></div>
+    </section>
+
+    <footer class="foot">
+      <span>Timão · Hackathon Aprova 2026 · dados fictícios</span>
+      <button class="link" id="reset">Reiniciar demo</button>
+    </footer>
+  </main>
+</div>
 
 <div class="player" id="player" hidden>
   <button class="close" id="closePlayer" aria-label="Fechar"></button>
@@ -92,7 +110,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="data.js?v=3"></script>
-<script src="app.js?v=3"></script>
+<script src="data.js?v=7"></script>
+<script src="app.js?v=7"></script>
 </body>
 </html>

@@ -18,34 +18,55 @@
   }
 
   // ---------- ícones ----------
+  const sv = (p, vb = "0 0 24 24") => `<svg viewBox="${vb}">${p}</svg>`;
   const I = {
-    check: '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
-    x: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
-    clock: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>',
-    clip: '<svg viewBox="0 0 24 24"><path d="M20 11.5l-8.3 8.3a5 5 0 01-7.1-7.1l8.8-8.8a3.3 3.3 0 014.7 4.7l-8.8 8.8a1.7 1.7 0 01-2.4-2.4l8.1-8.1"/></svg>',
-    mic: '<svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg>',
-    send: '<svg viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-2.5-6.5z"/></svg>',
-    cal: '<svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5" fill="currentColor" stroke="none"/><path d="M8 3v4M16 3v4" stroke="currentColor"/><g fill="#fff" stroke="none"><rect x="6.5" y="10" width="3" height="2.4" rx=".5"/><rect x="10.5" y="10" width="3" height="2.4" rx=".5"/><rect x="14.5" y="10" width="3" height="2.4" rx=".5"/><rect x="6.5" y="14" width="3" height="2.4" rx=".5"/><rect x="10.5" y="14" width="3" height="2.4" rx=".5"/><rect x="14.5" y="14" width="3" height="2.4" rx=".5"/></g></svg>',
-    link: '<svg viewBox="0 0 48 48" stroke-width="3.5"><path d="M20 28l8-8"/><path d="M22 14l3-3a7 7 0 0110 10l-3 3"/><path d="M26 34l-3 3a7 7 0 01-10-10l3-3"/></svg>',
-    play: '<svg viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z" fill="currentColor"/></svg>',
-    cursor: '<svg viewBox="0 0 24 24"><path d="M5 3l14 8-6 1.5L10 19z" fill="#111" stroke="#fff" stroke-width="1.4"/></svg>',
-    whatsapp: '<svg viewBox="0 0 24 24"><path d="M4 20l1.3-3.8A8 8 0 1112 20a8 8 0 01-3.9-1z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.4-1.8-.9-.8.8a4 4 0 01-2.4-2.4l.8-.8-.9-1.8z" fill="currentColor" stroke="none"/></svg>',
-    ticket: '<svg viewBox="0 0 24 24"><path d="M4 7h16v3a2 2 0 000 4v3H4v-3a2 2 0 000-4z"/><path d="M14 7v10" stroke-dasharray="2 2"/></svg>',
-    meet: '<svg viewBox="0 0 24 24"><circle cx="9" cy="9" r="3"/><circle cx="17" cy="10" r="2.4"/><path d="M3.5 19a5.5 5.5 0 0111 0M14.5 18a4 4 0 017 0"/></svg>',
-    bolt: '<svg viewBox="0 0 24 24"><path d="M13 3L5 13h6l-1 8 8-10h-6z"/></svg>',
-    dot: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"/></svg>',
-    spark: '<svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg>'
+    check: sv('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
+    x: sv('<path d="M6 6l12 12M18 6L6 18"/>'),
+    clock: sv('<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>'),
+    clip: sv('<path d="M20 11.5l-8.3 8.3a5 5 0 01-7.1-7.1l8.8-8.8a3.3 3.3 0 014.7 4.7l-8.8 8.8a1.7 1.7 0 01-2.4-2.4l8.1-8.1"/>'),
+    plus: sv('<path d="M12 5v14M5 12h14"/>'),
+    mic: sv('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/>'),
+    up: sv('<path d="M12 19V5M6 11l6-6 6 6"/>'),
+    chev: sv('<path d="M7 10l5 5 5-5"/>'),
+    cal: sv('<rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M8 3v4M16 3v4M4 10h16"/>'),
+    play: sv('<path d="M7 4l13 8-13 8z"/>'),
+    cursor: sv('<path d="M5 3l14 8-6 1.5L10 19z" fill="#18181b" stroke="#fff" stroke-width="1.4"/>'),
+    whatsapp: sv('<path d="M4 20l1.3-3.8A8 8 0 1112 20a8 8 0 01-3.9-1z"/><path d="M9.5 9.5c0 2.8 2.2 5 5 5"/>'),
+    ticket: sv('<path d="M4 7h16v3a2 2 0 000 4v3H4v-3a2 2 0 000-4z"/>'),
+    meet: sv('<circle cx="9" cy="9" r="3"/><circle cx="17" cy="10" r="2.4"/><path d="M3.5 19a5.5 5.5 0 0111 0M14.5 18a4 4 0 017 0"/>'),
+    bolt: sv('<path d="M13 3L5 13h6l-1 8 8-10h-6z"/>'),
+    dot: sv('<circle cx="12" cy="12" r="3.5" fill="currentColor" stroke="none"/>'),
+    spark: sv('<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>'),
+    home: sv('<path d="M4 11l8-7 8 7v8a1 1 0 01-1 1h-4v-6h-6v6H5a1 1 0 01-1-1z"/>'),
+    video: sv('<rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3"/>'),
+    users: sv('<circle cx="9" cy="8" r="3.2"/><path d="M3 19a6 6 0 0112 0"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.2A5 5 0 0121 19"/>'),
+    chat: sv('<path d="M5 18l-1.5 3 4-1.5A8 8 0 104 12a8 8 0 001 4z"/><circle cx="16" cy="16" r="3.5"/>'),
+    docok: sv('<path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h5"/><path d="M14 3l5 5v3M14 3v5h5"/><circle cx="17.5" cy="17.5" r="3.5"/><path d="M16 17.5l1 1 2-2"/>'),
+    money: sv('<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/>'),
+    clipboard: sv('<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM9 12h6M9 16h4"/>'),
+    building: sv('<path d="M4 21V5l7-2v18M11 9h7v12M7 8h1M7 12h1M7 16h1M14 13h1M14 17h1M3 21h18"/>'),
+    chart: sv('<path d="M4 4v16h16"/><path d="M7 15l4-5 3 3 5-7"/>'),
+    bell: sv('<path d="M6 16V11a6 6 0 0112 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 004 0"/>'),
+    form: sv('<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>'),
+    sparkle: sv('<path d="M12 4v4M12 16v4M4 12h4M16 12h4M7 7l2 2M15 15l2 2M7 17l2-2M15 9l2-2"/>'),
+    logo: '<svg viewBox="0 0 40 40" class="sc-logo"><path d="M10 33L20 8l10 25" stroke="#111" stroke-width="3.4" fill="none"/><path d="M2 22h36" stroke="#14c3d6" stroke-width="3.2"/></svg>',
+    logoSm: '<svg viewBox="0 0 40 40"><path d="M10 33L20 8l10 25" stroke="#111" stroke-width="3.4" fill="none"/><path d="M2 22h36" stroke="#14c3d6" stroke-width="3.2"/></svg>'
   };
   const GATILHO = {
     prazo: { ic: I.clock, nome: "Prazo vencido" },
     whatsapp: { ic: I.whatsapp, nome: "WhatsApp" },
     ticket: { ic: I.ticket, nome: "Chamado" },
-    agenda: { ic: I.cal.replace('fill="currentColor"', 'fill="none" stroke="currentColor"'), nome: "Agenda" },
+    agenda: { ic: I.cal, nome: "Agenda" },
     reuniao: { ic: I.meet, nome: "Fim de reunião" },
     painel: { ic: I.spark, nome: "Painel" }
   };
   const DONO = { prefeitura: "Prefeitura", aprova: "Aprova", agente: "Agente" };
   const VST = { aprovado: "Aprovado", reprovado: "Ajuste pedido", pendente: "Aguardando você", ajuste: "Em ajuste pelo agente" };
+  const OUTRAS = [
+    { nome: "Serra Azul · SP", pct: 64 },
+    { nome: "Porto Claro · PR", pct: 38 },
+    { nome: "Rio Fundo · MG", pct: 12 }
+  ];
 
   // ---------- datas ----------
   const now = () => new Date();
@@ -69,16 +90,29 @@
   // ---------- helpers de estado ----------
   const allTasks = () => S.fases.flatMap((f) => f.tasks.map((t) => ({ ...t, fase: f })));
   const isLate = (t) => !t.feito && d(t.data) < now();
+  const entrega = () => { const t = allTasks(); return Math.round((t.filter((x) => x.feito).length / t.length) * 100); };
   function log(gatilho, texto) {
     S.atividade.unshift({ hora: isoNow(), gatilho, texto, novo: true });
   }
   let ticketSeq = 18380;
   const novoTicket = () => "#" + ticketSeq++;
 
-  // ---------- topo ----------
+  // ---------- casca ----------
+  function renderShell() {
+    const rail = ["chat", "docok", "users", "money", "form", "clipboard", "building", "chart"];
+    $("#railIcons").innerHTML = rail.map((k) => `<span class="rail-btn ${k === "form" ? "on" : ""}">${I[k]}</span>`).join("");
+    $("#railBell").innerHTML = I.bell;
+    document.querySelectorAll(".ni[data-ic]").forEach((el) => (el.innerHTML = I[el.dataset.ic]));
+  }
   function renderTop() {
     const c = S.cliente;
-    $("#client").innerHTML = `<b>${esc(c.nome)} · ${esc(c.uf)}</b><small>${esc(c.contrato)} · ${c.secretarias} secretarias · ${c.processos} processos · implantadora ${esc(c.implantador)} · Pylon ${esc(c.pylon)}</small>`;
+    const ativa = S.fases.find((f) => f.status === "ativa");
+    $("#crumbName").textContent = c.nome;
+    $("#eyebrow").textContent = `Implantação · ${ativa ? ativa.nome + " em andamento" : "concluída"}`;
+    $("#heroTitle").innerHTML = `${esc(c.nome)}.<span>Implantação da prefeitura toda.</span>`;
+    $("#heroMeta").textContent = `${c.secretarias} secretarias · ${c.processos} processos · implantadora ${c.implantador} · champion ${c.champion} · Pylon ${c.pylon}`;
+    $("#implantacoes").innerHTML = [{ nome: `${c.nome.replace("Prefeitura de ", "")} · ${c.uf}`, pct: entrega(), on: true }, ...OUTRAS]
+      .map((p) => `<button class="impl ${p.on ? "on" : ""}" ${p.on ? "" : 'data-outra="1"'}><span class="ni">${I.building}</span>${esc(p.nome)}<span class="pct">${p.pct}%</span></button>`).join("");
   }
   let lastSync = Date.now();
   function pulseSync() {
@@ -93,31 +127,31 @@
     const s = Math.round((Date.now() - lastSync) / 1000);
     $("#syncTxt").textContent = s < 5 ? "Pylon sincronizado agora" : `Pylon sincronizado há ${s < 60 ? s + "s" : Math.round(s / 60) + " min"}`;
   }
-  function tickClock() {
-    $("#clock").textContent = now().toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) + "  " + now().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-  }
 
   // ---------- KPIs ----------
   function renderKpis() {
     const tasks = allTasks();
     const aguardando = tasks.filter((t) => t.dono === "prefeitura" && !t.feito).length + S.validacoes.filter((v) => v.status === "pendente").length;
-    const entrega = Math.round((tasks.filter((t) => t.feito).length / tasks.length) * 100);
+    const pct = entrega();
     const aprovados = S.validacoes.filter((v) => v.status === "aprovado").length;
     const dias = daysUntil(S.cliente.meta + "T09:00");
     $("#kpis").innerHTML = `
-      <div class="kpi ${aguardando ? "alert" : "good"}"><span class="v">${aguardando}</span><span class="l">aguardando você</span><span class="s">tarefas e vídeos da prefeitura</span></div>
-      <div class="kpi cyan"><span class="v">${entrega}%</span><span class="l">da implantação entregue</span><div class="bar"><i style="width:${entrega}%"></i></div></div>
-      <div class="kpi good"><span class="v">${S.cliente.horasReuniaoEvitadas}h</span><span class="l">de reunião evitadas</span><span class="s">validação por vídeo em vez de call</span></div>
-      <div class="kpi"><span class="v">${dias}</span><span class="l">dias para o go-live</span><span class="s">${aprovados} de ${S.validacoes.length} vídeos aprovados · meta ${dia(S.cliente.meta + "T09:00")}</span></div>`;
+      <div class="kpi ${aguardando ? "alert" : "good"}"><span class="k">Aguardando você</span><span class="v">${aguardando}</span><span class="s">tarefas e vídeos da prefeitura</span></div>
+      <div class="kpi"><span class="k">Entrega</span><span class="v">${pct}%</span><div class="bar"><i style="width:${pct}%"></i></div></div>
+      <div class="kpi good"><span class="k">Reunião evitada</span><span class="v">${S.cliente.horasReuniaoEvitadas}h</span><span class="s">validação por vídeo em vez de call</span></div>
+      <div class="kpi"><span class="k">Go-live</span><span class="v">${dias} dias</span><span class="s">${aprovados} de ${S.validacoes.length} vídeos aprovados · meta ${dia(S.cliente.meta + "T09:00")}</span></div>`;
   }
 
   // ---------- fases ----------
   function renderFases() {
+    const ST = { ativa: "Em andamento", futura: "Próxima", concluida: "Concluída" };
+    const ativa = S.fases.find((f) => f.status === "ativa");
+    $("#fasesHint").textContent = ativa ? `${ativa.nome}: ${ativa.tasks.filter((t) => t.feito).length} de ${ativa.tasks.length} tarefas feitas` : "";
     $("#fases").innerHTML = S.fases.map((f) => {
       const feitas = f.tasks.filter((t) => t.feito).length;
       const tasks = [...f.tasks].sort((a, b) => (isLate(b) - isLate(a)) || (a.feito - b.feito) || (d(a.data) - d(b.data)));
       return `<section class="fase ${f.status}">
-        <div class="fase-h"><h2>${esc(f.nome)}</h2><span class="desc">${esc(f.descricao)}</span><span class="count">${feitas}/${f.tasks.length}</span></div>
+        <div class="fase-h"><h3>${esc(f.nome)}</h3><span class="fase-st">${ST[f.status]}</span><span class="count">${feitas}/${f.tasks.length}</span><span class="desc">${esc(f.descricao)}</span></div>
         <ul class="tasks">${tasks.map((t) => {
           const late = isLate(t);
           const podeMarcar = t.dono === "prefeitura" && f.status === "ativa";
@@ -138,8 +172,9 @@
     const ico = { feito: I.check, atrasado: I.clock, andamento: I.bolt };
     $("#reunioes").innerHTML = [...S.reunioes].sort((a, b) => d(b.data) - d(a.data)).map((r) => `
       <div class="reu">
-        <div class="reu-h"><h3>${esc(r.titulo)}<span class="st ${r.status}">${r.status === "realizada" ? "Realizada" : "Agendada"}</span></h3>
-          <span class="d">${dia(r.data)} · ${hora(r.data)} · ${esc(r.secretaria)}</span></div>
+        <div class="k">${esc(r.secretaria)}<span class="st ${r.status}">${r.status === "realizada" ? "Realizada" : "Agendada"}</span></div>
+        <h3>${esc(r.titulo)}</h3>
+        <div class="d">${dia(r.data)} · ${hora(r.data)}${r.duracao ? ` · ${r.duracao} min` : ""}</div>
         ${r.acionaveis ? `<ul>${r.acionaveis.map((a) => `<li><span class="ic s-${a.status}">${ico[a.status] || I.dot}</span><span>${esc(a.texto)} <span class="tag ${a.dono}">${DONO[a.dono]}</span>${a.fup ? `<span class="sub">${esc(a.fup)}</span>` : ""}</span></li>`).join("")}</ul>` : ""}
         ${r.pauta ? `<div class="pauta-l">Pauta montada pelo agente</div><ul>${r.pauta.map((p) => `<li><span class="ic s-pauta">${I.dot}</span><span>${esc(p)}</span></li>`).join("")}</ul>` : ""}
         ${r.confirmacao ? `<div class="conf">${esc(r.confirmacao)}</div>` : ""}
@@ -156,7 +191,7 @@
         const aviso = t.feito ? "" : isLate(t) ? `Atrasada desde ${dia(t.data)}` : dd <= 1 ? "Falta 1 dia" : "";
         return `<li class="${t.feito ? "done" : ""}"><button class="rd" data-task="${t.id}" aria-label="Marcar">${t.feito ? I.check : ""}</button><span>${esc(t.titulo)}${aviso ? `<small>${aviso}</small>` : ""}</span></li>`;
       }),
-      ...vids.map((v) => `<li><button class="rd" data-open="${v.id}" aria-label="Abrir vídeo"></button><span>Validar vídeo: ${esc(v.processo)}<small style="color:var(--amber)">vídeo novo</small></span></li>`)
+      ...vids.map((v) => `<li><button class="rd" data-open="${v.id}" aria-label="Abrir vídeo"></button><span>Validar vídeo: ${esc(v.processo)}<small class="new">vídeo novo</small></span></li>`)
     ];
     $("#checklist").innerHTML = items.join("") || `<li class="empty">Nada pendente hoje 🎉</li>`;
   }
@@ -170,22 +205,62 @@
     S.atividade.forEach((a) => delete a.novo);
   }
 
-  // ---------- vídeos ----------
-  let filtro = "todos";
-  function mockHTML(v, playing) {
+  // ---------- vídeo de validação ----------
+  // Roteiro igual aos vídeos da Aprova: abertura, a tela com uma legenda por alteração e o fechamento.
+  const STEP_MS = 2800;
+  const steps = (v) => v.alteracoes.length + 2;
+  function vidHTML(v) {
     const base = ["Nome do requerente", "CPF / CNPJ", "Endereço do imóvel"];
-    let n = 0;
-    const campos = base.map((l) => ({ l, novo: false })).concat(v.alteracoes.map((l) => ({ l, novo: true, n: n++ })));
     const slug = v.processo.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-");
-    return `<div class="mock ${playing ? "play" : "mini"}" aria-hidden="true">
-      <div class="mock-bar"><i></i><i></i><i></i><span>prefeitura.aprova.com.br/${slug}</span></div>
-      <div class="mock-body"><div class="mock-title">${esc(v.processo)}</div>
-        ${campos.map((c) => `<div class="mf ${c.novo ? "novo" : ""}" style="--n:${c.n || 0}"><label>${esc(c.l)}</label><div class="mi"></div></div>`).join("")}
-        <span class="mock-btn">Enviar solicitação</span>
+    const campos = base.map((l) => `<div class="ui-f"><label>${esc(l)}</label><div class="in"></div></div>`).join("") +
+      v.alteracoes.map((l, i) => `<div class="ui-f novo" data-f="${i}"><label>${esc(l)}</label><div class="in"></div></div>`).join("");
+    return `<div class="vid" aria-hidden="true">
+      <div class="prog">${Array.from({ length: steps(v) }, () => "<i><b></b></i>").join("")}</div>
+      <div class="scene intro on">
+        <div class="sc-eyebrow">Validação · ${esc(v.secretaria)}</div>
+        <div class="sc-title">${esc(v.processo)}.<span>O que mudou.</span></div>
+        <div class="sc-cards">${v.alteracoes.map((a, i) => `${i ? '<span class="sc-arrow">→</span>' : ""}<div class="sc-card"><div class="l">Alteração ${i + 1}</div><div class="t">${esc(a)}</div></div>`).join("")}</div>
       </div>
-      <div class="cursor">${I.cursor}</div>
+      <div class="scene screen">
+        <div class="ui-rail">${I.logoSm}<i></i><i></i><i></i><i></i></div>
+        <div class="ui-main">
+          <div class="ui-crumb">prefeitura.aprova.com.br / ${slug}</div>
+          <div class="ui-h">${esc(v.processo)}</div>
+          <div class="ui-fields">${campos}</div>
+          <span class="ui-btn">Enviar solicitação</span>
+        </div>
+        <div class="cursor">${I.cursor}</div>
+        <div class="cap"></div>
+      </div>
+      <div class="scene outro">
+        ${I.logo}
+        <div class="sc-title">${esc(v.processo)} ajustado.<span>Aprove com um toque.</span></div>
+        <div class="sc-small">${esc(v.ticket)} · vídeo gerado pelo agente</div>
+      </div>
     </div>`;
   }
+  function showStep(vid, v, step) {
+    const n = steps(v);
+    const scene = step === 0 ? "intro" : step === n - 1 ? "outro" : "screen";
+    vid.querySelectorAll(".scene").forEach((s) => s.classList.toggle("on", s.classList.contains(scene)));
+    vid.querySelectorAll(".prog i").forEach((p, i) => { p.className = i < step ? "done" : i === step ? "cur" : ""; });
+    vid.style.setProperty("--dur", STEP_MS + "ms");
+    const cur = vid.querySelector(".prog i.cur");
+    if (cur) { cur.className = ""; void cur.offsetWidth; cur.className = "cur"; }
+    if (scene !== "screen") return;
+    const k = step - 1;
+    vid.querySelectorAll(".ui-f").forEach((f) => f.classList.toggle("hl", f.dataset.f === String(k)));
+    $(".cap", vid).textContent = v.alteracoes[k];
+    const f = vid.querySelector(`.ui-f[data-f="${k}"] .in`);
+    const box = vid.getBoundingClientRect();
+    const r = f.getBoundingClientRect();
+    const c = $(".cursor", vid);
+    c.style.left = ((r.left - box.left + r.width * 0.6) / box.width) * 100 + "%";
+    c.style.top = ((r.top - box.top + r.height * 0.5) / box.height) * 100 + "%";
+  }
+
+  // ---------- validações ----------
+  let filtro = "todos";
   function renderValidacoes() {
     const cont = { todos: S.validacoes.length };
     S.validacoes.forEach((v) => (cont[v.status] = (cont[v.status] || 0) + 1));
@@ -195,9 +270,9 @@
     const lista = S.validacoes.filter((v) => filtro === "todos" || v.status === filtro);
     $("#vgrid").innerHTML = lista.map((v) => `
       <button class="vcard" data-open="${v.id}">
-        <div class="vframe">${mockHTML(v, false)}<span class="link-ic">${I.link}</span><span class="play"><span>${I.play}</span></span></div>
-        <div class="vlabel"><span class="st st-ic ${v.status}">${v.status === "aprovado" ? I.check : v.status === "reprovado" ? I.x : v.status === "ajuste" ? I.bolt : I.clock}</span>${esc(v.processo)}</div>
-        <div class="vsub">${esc(VST[v.status])} · ${esc(v.ticket)}</div>
+        <div class="vthumb">${vidHTML(v)}<span class="dur">0:${String(Math.round((steps(v) * STEP_MS) / 1000)).padStart(2, "0")}</span><span class="play"><span>${I.play}</span></span></div>
+        <div class="vlabel"><span class="st-ic ${v.status}">${v.status === "aprovado" ? I.check : v.status === "reprovado" ? I.x : v.status === "ajuste" ? I.bolt : I.clock}</span>${esc(v.processo)}</div>
+        <div class="vsub">${esc(VST[v.status])} · ${esc(v.secretaria)} · ${esc(v.ticket)}</div>
       </button>`).join("");
   }
 
@@ -212,19 +287,24 @@
   }
 
   // ---------- ai.aprova (simulado na demo; em produção é o agente) ----------
-  function aiBox({ placeholder, chips = [], ctx = null, logEl = null }) {
+  function aiBox({ placeholder, sugs = [], ctx = null }) {
     const box = document.createElement("div");
     box.className = "ai";
     box.innerHTML = `<div class="ai-log"></div>
-      <form class="ai-bar">
-        <label class="ic-btn" title="Anexar PDF, foto ou planilha">${I.clip}<input type="file" hidden></label>
-        <input type="text" placeholder="${esc(placeholder)}" aria-label="Mensagem para o ai.aprova">
-        <button type="button" class="ic-btn mic" title="Gravar áudio">${I.mic}</button>
-        <button type="submit" class="ic-btn" title="Enviar">${I.send}</button>
+      <form class="box">
+        <textarea rows="2" placeholder="${esc(placeholder)}" aria-label="Mensagem para o ai.aprova"></textarea>
+        <div class="box-row">
+          <label class="ib" title="Anexar PDF, foto ou planilha">${I.plus}<input type="file" hidden></label>
+          <button type="button" class="ib mic" title="Gravar áudio">${I.mic}</button>
+          <span class="model">${I.sparkle}ai.aprova · implantação ${I.chev}</span>
+          <span class="grow"></span>
+          <span class="pill-ok">Conectado</span>
+          <button type="submit" class="send" title="Enviar">${I.up}</button>
+        </div>
       </form>
-      ${chips.length ? `<div class="chips">${chips.map((c) => `<button type="button" class="chip">${esc(c)}</button>`).join("")}</div>` : ""}`;
+      ${sugs.length ? `<ul class="sugs">${sugs.map((s) => `<li><button type="button" class="sug" data-msg="${esc(s.msg || s.t)}">${I[s.ic]}<b>${esc(s.t)}</b><span>${esc(s.d)}</span></button></li>`).join("")}</ul>` : ""}`;
     const logBox = $(".ai-log", box);
-    const input = $("input[type=text]", box);
+    const input = $("textarea", box);
     const say = (who, html, cls = "") => {
       const m = document.createElement("div");
       m.className = `msg ${who} ${cls}`;
@@ -241,7 +321,11 @@
       setTimeout(() => { t.remove(); say("bot", responder(text, ctx)); }, 800);
     };
     $("form", box).addEventListener("submit", (e) => { e.preventDefault(); send(input.value); });
-    box.querySelectorAll(".chip").forEach((b) => b.addEventListener("click", () => send(b.textContent)));
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input.value); } });
+    box.querySelectorAll(".sug").forEach((b) => b.addEventListener("click", () => {
+      if (b.dataset.msg === "__aprovar") return decide(ctx, "aprovado");
+      send(b.dataset.msg);
+    }));
     $("input[type=file]", box).addEventListener("change", (e) => {
       const f = e.target.files[0];
       if (!f) return;
@@ -264,13 +348,12 @@
       if (mic.classList.contains("rec")) {
         mic.classList.remove("rec");
         input.placeholder = placeholder;
-        send(ctx ? "O campo de prazo tem que ser 30 dias, não 15" : "Quero mudar o formulário do Alvará");
+        send(ctx ? "O prazo de resposta tem que ser 30 dias, não 15" : "Quero mudar o formulário do Alvará");
       } else {
         mic.classList.add("rec");
         input.placeholder = "Gravando… toque de novo para enviar";
       }
     });
-    if (logEl) logEl(say);
     return box;
   }
 
@@ -308,19 +391,18 @@
   }
 
   // ---------- player / reel ----------
-  let capTimer = null;
+  let playT = null, playId = null, playStep = 0;
   function slideHTML(v) {
     return `<section class="slide" data-id="${v.id}">
       <div class="stage">
-        <div><span class="pill">${esc(v.processo)}</span><span class="vstatus ${v.status}">${esc(VST[v.status])}</span></div>
+        <div class="stage-h"><span class="pill">${esc(v.processo)}</span><span class="vstatus ${v.status}">${esc(VST[v.status])}</span></div>
         <div class="who">${esc(v.secretaria)} · ${esc(v.ticket)} · vídeo gerado pelo agente ${rel(v.gerado)}</div>
-        <div class="mockwrap">${mockHTML(v, true)}</div>
-        <div class="caption"><span class="k">ALTERAÇÃO 1/${v.alteracoes.length}</span><span class="t">${esc(v.alteracoes[0])}</span></div>
+        <div class="vidwrap">${vidHTML(v)}</div>
       </div>
       <div class="actions">
-        <button class="act ok" data-act="ok" title="Aprovar">${I.check}</button>
-        <button class="act no" data-act="no" title="Pedir ajuste">${I.x}</button>
-        <button class="act cal" data-act="cal" title="Agendar conversa">${I.cal}</button>
+        <button class="act ok" data-act="ok" title="Aprovar">${I.check}</button><span class="act-l">Aprovar</span>
+        <button class="act no" data-act="no" title="Pedir ajuste">${I.x}</button><span class="act-l">Ajustar</span>
+        <button class="act cal" data-act="cal" title="Agendar conversa">${I.cal}</button><span class="act-l">Agendar</span>
       </div>
       <div class="side">
         <h4>O que precisa mudar?</h4>
@@ -332,41 +414,40 @@
   }
   function openPlayer(id) {
     const reel = $("#reel");
-    reel.innerHTML = S.validacoes.map(slideHTML).join("") ;
+    reel.innerHTML = S.validacoes.map(slideHTML).join("");
     reel.querySelectorAll(".slide").forEach((sl) => {
-      const box = aiBox({ placeholder: "Ex.: o prazo é 30 dias", chips: ["Está tudo certo", "Falta um campo", "Mudar a etapa de análise"], ctx: sl.dataset.id });
-      $(".ai-slot", sl).replaceWith(box);
-      box.querySelectorAll(".chip").forEach((c) => {
-        if (c.textContent === "Está tudo certo") {
-          const clone = c.cloneNode(true);
-          c.replaceWith(clone);
-          clone.addEventListener("click", () => decide(sl.dataset.id, "aprovado"));
-        }
+      const box = aiBox({
+        placeholder: "Ex.: o prazo é 30 dias, não 15",
+        ctx: sl.dataset.id,
+        sugs: [
+          { ic: "check", t: "Está tudo certo", d: "aprova o vídeo", msg: "__aprovar" },
+          { ic: "form", t: "Falta um campo", d: "diga qual" },
+          { ic: "clock", t: "Mudar um prazo", d: "da análise ou da resposta" }
+        ]
       });
+      $(".ai-slot", sl).replaceWith(box);
     });
     $("#player").hidden = false;
     document.body.style.overflow = "hidden";
     const target = reel.querySelector(`[data-id="${id}"]`);
     reel.scrollTop = target ? target.offsetTop : 0;
-    startCaptions();
+    playId = null;
+    clearInterval(playT);
+    playT = setInterval(tick, STEP_MS);
+    tick();
+  }
+  function tick() {
+    const reel = $("#reel");
+    const sl = reel.children[Math.round(reel.scrollTop / reel.clientHeight)];
+    if (!sl) return;
+    const v = S.validacoes.find((x) => x.id === sl.dataset.id);
+    if (playId !== v.id) { playId = v.id; playStep = 0; } else playStep = (playStep + 1) % steps(v);
+    showStep($(".vid", sl), v, playStep);
   }
   function closePlayer() {
     $("#player").hidden = true;
     document.body.style.overflow = "";
-    clearInterval(capTimer);
-  }
-  function startCaptions() {
-    clearInterval(capTimer);
-    const idx = {};
-    capTimer = setInterval(() => {
-      const reel = $("#reel");
-      const i = Math.round(reel.scrollTop / reel.clientHeight);
-      const sl = reel.children[i];
-      if (!sl) return;
-      const v = S.validacoes.find((x) => x.id === sl.dataset.id);
-      idx[v.id] = ((idx[v.id] || 0) + 1) % v.alteracoes.length;
-      $(".caption", sl).innerHTML = `<span class="k">ALTERAÇÃO ${idx[v.id] + 1}/${v.alteracoes.length}</span><span class="t">${esc(v.alteracoes[idx[v.id]])}</span>`;
-    }, 2600);
+    clearInterval(playT);
   }
   function decide(id, status) {
     const v = S.validacoes.find((x) => x.id === id);
@@ -374,13 +455,13 @@
     if (status === "aprovado") {
       v.comentario = `Aprovado pela prefeitura em ${dia(isoNow())}`;
       log("painel", `Prefeitura aprovou o vídeo do ${v.processo}. O agente fechou o ${v.ticket} e marcou o processo como pronto pro go-live`);
-      toast(`✅ ${v.processo} aprovado. Ticket ${v.ticket} fechado.`);
+      toast(`${v.processo} aprovado. Ticket ${v.ticket} fechado.`);
     }
     save(); afterChange(id);
     if (status === "aprovado") setTimeout(() => nextSlide(id), 700);
   }
   function afterChange(id) {
-    renderKpis(); renderChecklist(); renderFeed(); renderValidacoes();
+    renderTop(); renderKpis(); renderChecklist(); renderFeed(); renderValidacoes();
     const sl = $(`#reel [data-id="${id}"]`);
     if (!sl) return;
     const v = S.validacoes.find((x) => x.id === id);
@@ -389,7 +470,7 @@
     st.textContent = VST[v.status];
     let cm = $(".comment", sl);
     if (v.comentario) {
-      if (!cm) { cm = document.createElement("div"); $(".side h4", sl).nextElementSibling.after(cm); }
+      if (!cm) { cm = document.createElement("div"); $(".side .sub", sl).after(cm); }
       cm.className = `comment ${v.status === "aprovado" ? "ok" : ""}`;
       cm.textContent = v.comentario;
     }
@@ -422,7 +503,7 @@
       log("agenda", `Conversa de 15 min sobre o ${v.processo} agendada para ${dia(iso)} às ${hora(iso)}. Pauta montada com as alterações do vídeo`);
       save(); renderReunioes(); renderFeed();
       box.remove();
-      toast(`📅 Agendado: ${dia(iso)} às ${hora(iso)}. Convite enviado no WhatsApp.`);
+      toast(`Agendado: ${dia(iso)} às ${hora(iso)}. Convite enviado no WhatsApp.`);
     });
   }
 
@@ -447,20 +528,21 @@
         log("painel", `Prefeitura concluiu "${real.titulo}". O agente liberou o próximo passo`);
         toast("Feito! O agente já seguiu com o próximo passo.");
       }
-      save(); renderKpis(); renderFases(); renderChecklist(); renderFeed();
+      save(); renderTop(); renderKpis(); renderFases(); renderChecklist(); renderFeed();
       return;
     }
     const op = e.target.closest("[data-open]");
     if (op) { openPlayer(op.dataset.open); return; }
     const f = e.target.closest("[data-f]");
-    if (f) { filtro = f.dataset.f; renderValidacoes(); return; }
+    if (f && f.closest("#filters")) { filtro = f.dataset.f; renderValidacoes(); return; }
+    if (e.target.closest("[data-outra]")) { toast("Na demo, só Vale Verde tem dados."); return; }
     const act = e.target.closest("[data-act]");
     if (act) {
       const sl = act.closest(".slide");
       if (act.dataset.act === "ok") decide(sl.dataset.id, "aprovado");
       if (act.dataset.act === "no") {
         const v = S.validacoes.find((x) => x.id === sl.dataset.id);
-        const inp = $(".side input[type=text]", sl);
+        const inp = $(".side textarea", sl);
         inp.placeholder = "O que precisa mudar?";
         inp.focus();
         if (v.status !== "reprovado") { v.status = "reprovado"; save(); afterChange(v.id); }
@@ -484,10 +566,17 @@
   });
 
   // ---------- início ----------
-  $("#helpAi").appendChild(aiBox({ placeholder: "Escreva, grave um áudio ou anexe", chips: ["Validar processos", "Alteração de Formulário", "Cadastro de Usuários"] }));
+  renderShell();
+  $("#helpAi").appendChild(aiBox({
+    placeholder: "Escreva uma mensagem, grave um áudio ou anexe a lei…",
+    sugs: [
+      { ic: "video", t: "Validar processos", d: "Abre os vídeos que estão esperando a sua aprovação." },
+      { ic: "form", t: "Alteração de Formulário", d: "Diga o que muda. Pode mandar PDF, foto ou áudio." },
+      { ic: "users", t: "Cadastro de Usuários", d: "Envia o link de cadastro para a sua equipe no WhatsApp." }
+    ]
+  }));
   renderAll();
-  tickClock(); tickSync();
-  setInterval(tickClock, 15000);
+  tickSync();
   setInterval(tickSync, 1000);
   setInterval(renderFeed, 60000);
 })();
