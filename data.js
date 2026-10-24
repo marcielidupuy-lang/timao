@@ -236,4 +236,4 @@ window.DATA = {
 
 // WhatsApp da demo: DDI + DDD + número, só dígitos (ex.: "5511999998888").
 // Vazio, o WhatsApp abre e pede pra escolher o contato.
-window.WHATSAPP = "";
+window.WHATSAPP = "554599967324";

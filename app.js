@@ -28,6 +28,7 @@
   const botaoWhats = (msg, rotulo = "Mandar no WhatsApp") => `<button type="button" class="btn sm wa" data-wa="${esc(msg)}">${I.whatsapp}${rotulo}</button>`;
   const PN = () => S.painel || (S.painel = JSON.parse(JSON.stringify(PAINEL_PADRAO)));
   const visivel = (t) => !PN().ocultas.includes(t.id);
+  let EDIT = false;
   const preview = () => { try { return sessionStorage.getItem("timao-prev") === "1"; } catch (e) { return false; } };
   function load() {
     try {
@@ -189,8 +190,8 @@
     $("#railIcons").innerHTML = rail.map((k) => `<span class="rail-btn ${k === "form" ? "on" : ""}">${I[k]}</span>`).join("");
     $("#railBell").innerHTML = I.bell;
     $(".role").innerHTML = ROLE === "i"
-      ? `<button class="btn sm" data-preview="1">${I.pencil}Abrir e editar painel do cliente</button>`
-      : preview() ? `<span class="prev-tag">${I.pencil}Editando o painel da prefeitura</span><button class="btn sm ghost" data-back="1">Voltar ao implantador</button>` : "";
+      ? `<button class="btn sm ghost" data-preview="edit">${I.pencil}Editar painel do cliente</button><button class="btn sm" data-preview="1">${I.ext}Abrir painel do cliente</button>`
+      : preview() ? `<span class="prev-tag">${I.eye}Você está vendo o painel da prefeitura</span>${EDIT ? "" : `<button class="btn sm ghost" data-edit="1">${I.pencil}Editar painel</button>`}<button class="btn sm ghost" data-back="1">Voltar ao implantador</button>` : "";
     $("#avatar").textContent = ROLE === "i" ? "MD" : "AR";
     const c = S.cliente;
     $("#who").innerHTML = ROLE === "i"
@@ -676,7 +677,7 @@
     const p = PN();
     const sw = (on) => `<span class="sw ${on ? "on" : ""}"><i></i></span>`;
     const tarefas = S.fases.flatMap((f) => f.tasks.map((t) => ({ t, f })));
-    return `<div class="ed-h"><div><span class="who-k">Painel da prefeitura</span><h3>Editar o que aparece</h3></div><button class="btn sm ghost" data-back="1">Concluir</button></div>
+    return `<div class="ed-h"><div><span class="who-k">Painel da prefeitura</span><h3>Editar o que aparece</h3></div><button class="dr-x" data-edclose="1" aria-label="Fechar edição" title="Fechar">${I.x}</button></div>
       <p class="hint">Cada mudança aparece na hora, aqui do lado.</p>
       <section class="ed-sec"><h4>Blocos e telas</h4>
         <ul class="ed-list">${BLOCOS.map(([k, nome, desc]) => `<li><div class="qt"><b>${nome}</b><span>${desc}</span></div><button class="sw-btn" data-bloco="${k}" aria-pressed="${!!p.blocos[k]}" aria-label="${p.blocos[k] ? "Esconder" : "Mostrar"} ${nome}">${sw(p.blocos[k])}</button></li>`).join("")}</ul></section>
@@ -774,7 +775,7 @@
     $("#view").innerHTML = VIEWS[`${ROLE}/${PAGE}`]();
     // Implantador dentro do painel da prefeitura: o editor fica numa lateral à direita.
     let ed = $("#edside");
-    const editando = ROLE === "c" && preview();
+    const editando = ROLE === "c" && preview() && EDIT;
     document.body.classList.toggle("editing", editando);
     if (editando) {
       if (!ed) { ed = document.createElement("aside"); ed.id = "edside"; ed.className = "edside"; ed.setAttribute("aria-label", "Editar painel do cliente"); document.body.appendChild(ed); }
@@ -1323,12 +1324,15 @@
     const wa = el("[data-wa]");
     if (wa) { abrirWhats(wa.dataset.wa); return; }
     let x;
-    if (el("[data-preview]")) {
+    if ((x = el("[data-preview]"))) {
       try { sessionStorage.setItem("timao-prev", "1"); } catch (er) {}
-      go("c", "inicio");
+      EDIT = x.dataset.preview === "edit";
+      if (location.hash === "#/c/inicio") render(); else go("c", "inicio");
       return;
     }
-    if (el("[data-back]")) { try { sessionStorage.removeItem("timao-prev"); } catch (er) {} go("i", "visao"); return; }
+    if (el("[data-edit]")) { EDIT = true; render(); return; }
+    if (el("[data-edclose]")) { EDIT = false; render(); return; }
+    if (el("[data-back]")) { EDIT = false; try { sessionStorage.removeItem("timao-prev"); } catch (er) {} go("i", "visao"); return; }
     const editou = (msg) => { log("painel", msg); save(); toast("Painel do cliente atualizado."); refresh(); };
     if ((x = el("[data-bloco]"))) {
       const k = x.dataset.bloco, nome = BLOCOS.find((b) => b[0] === k)[1];
@@ -1505,6 +1509,7 @@
   $("#closePlayer").addEventListener("click", closePlayer);
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
+    if (EDIT && $("#player").hidden && $("#drawer").hidden) { EDIT = false; render(); return; }
     if (!$("#modal").hidden) closeModal();
     else if (!$("#player").hidden) closePlayer();
     else if (!$("#drawer").hidden) closeDrawer();
