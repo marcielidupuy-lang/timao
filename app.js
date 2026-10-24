@@ -205,14 +205,14 @@
     $("#who").innerHTML = ROLE === "i"
       ? `<span class="who-k">Implantadora</span><b>${esc(c.implantador)}</b>`
       : `<span class="who-k">${esc(c.nome)}</span><b>${esc(c.champion)}</b>`;
-    // Na carteira nenhum cliente está aberto: o menu do cliente só aparece depois de clicar num.
-    const items = ROLE === "i" && PAGE === "carteira" ? rotas(ROLE).slice(0, 1) : rotas(ROLE);
+    // O menu da conta fica fixo, também na carteira.
+    const items = rotas(ROLE);
     const link = (r) => {
       const n = r.badge ? r.badge() : 0;
       return `<a class="nav2-item ${r.id === PAGE ? "on" : ""}" href="#/${ROLE}/${r.id}"><span class="ni">${I[r.ic]}</span>${r.nome}${n ? `<span class="badge">${n}</span>` : ""}</a>`;
     };
     if (ROLE === "i") {
-      $("#nav").innerHTML = link(items[0]) + (items.length > 1 ? `<div class="nav2-label">${esc(c.nome.replace("Prefeitura de ", ""))} · ${c.uf}</div>` + items.slice(1).map(link).join("") : "");
+      $("#nav").innerHTML = link(items[0]) + (items.length > 1 ? `<div class="nav2-label">Conta</div>` + items.slice(1).map(link).join("") : "");
       $("#nav2Extra").innerHTML = `<div class="nav2-label">Instruções do agente</div><a class="nav2-item small" href="${REPO}" target="_blank" rel="noopener"><span class="ni">${I.bolt}</span>Abrir pasta INSTRUCTIONS</a>`;
     } else {
       $("#nav").innerHTML = items.map(link).join("");
