@@ -367,6 +367,16 @@
     const c = S.cliente;
     const pct = entrega();
     const pend = doCliente().length + vidsPend().length;
+    if (lado === "c") {
+      // Na prefeitura não mostramos "reunião evitada"; no lugar entra a agenda.
+      const prox = proxReunioes()[0];
+      return `<section class="kpis">
+        ${kpi("Entrega", pct + "%", "", "", pct, "entrega")}
+        ${kpi("Com você", pend, "tarefas e vídeos", pend ? "alert" : "good", undefined, "pend")}
+        ${kpi("Go-live", daysUntil(c.meta + "T09:00") + " dias", "meta " + dia(c.meta + "T09:00"), "", undefined, "golive")}
+        ${kpi("Agenda de reunião", prox ? dia(prox.data) : "–", prox ? `${hora(prox.data)} · ${esc(prox.secretaria)}` : "nenhuma marcada", "", undefined, "agenda")}
+      </section>`;
+    }
     return `<section class="kpis">
         ${kpi("Entrega", pct + "%", "", "", pct, "entrega")}
         ${kpi(lado === "c" ? "Com você" : "Com a prefeitura", pend, "tarefas e vídeos", pend ? "alert" : "good", undefined, "pend")}
@@ -380,12 +390,11 @@
   const fimFase = (f) => f.tasks.map((t) => t.data).sort().pop();
   const tagDono = (t) => `<span class="tag ${ROLE === "c" && t.dono === "agente" ? "aprova" : t.dono}">${DONO[ROLE][t.dono]}</span>`;
 
-  // Os 2 meses da implantação: uma barra por fase com o "hoje" e, embaixo, cada entrega com o prazo.
-  function linhaTempoHTML() {
+  // Os 2 meses da implantação numa barra, uma faixa por fase e a marca de hoje.
+  function ganttHTML() {
     const c = S.cliente;
     const ini = d(c.inicio + "T00:00"), fim = d(c.meta + "T23:59");
     const pos = (x) => Math.min(100, Math.max(0, ((x - ini) / (fim - ini)) * 100));
-    const todas = allTasks(), feitas = todas.filter((t) => t.feito).length, late = todas.filter(isLate).length;
     let de = ini;
     const segs = S.fases.map((f) => {
       const ate = d(fimFase(f));
@@ -393,6 +402,39 @@
       de = ate;
       return s;
     }).join("");
+    return `<div class="gantt"><div class="gantt-track">${segs}<span class="gantt-now" style="left:${pos(now())}%"><span>Hoje</span></span></div>
+        <div class="gantt-axis"><span>${dia(c.inicio + "T09:00")} · início</span><span>${dia(c.meta + "T09:00")} · go-live</span></div></div>`;
+  }
+
+  // Prefeitura: o que o contrato prevê entregar em cada fase (o escopo), com prazo e situação.
+  function escopoHTML() {
+    const c = S.cliente, ESC = window.DATA.escopo || {};
+    const st = (x) => x.status === "entregue" ? "done" : d(x.prazo + "T23:59") < now() ? "late" : x.status === "andamento" ? "doing" : "";
+    const itens = S.fases.flatMap((f) => ESC[f.id] || []);
+    const n = (k) => itens.filter((x) => st(x) === k).length;
+    let hoje = false;
+    const fases = S.fases.map((f) => {
+      const lista = [...(ESC[f.id] || [])].sort((a, b) => d(a.prazo) - d(b.prazo));
+      const lis = lista.map((x) => {
+        let pre = "";
+        if (!hoje && d(x.prazo + "T23:59") > now()) { hoje = true; pre = `<li class="today"><span>Hoje · ${dia(isoNow())}</span></li>`; }
+        const s = st(x);
+        return pre + `<li class="${s}"><span class="dt">${s === "done" ? I.check : s === "late" ? I.clock : ""}</span><span class="tx"><b>${esc(x.t)}</b><small>${esc(x.d)}</small></span><span class="wd">${s === "late" ? "atrasada · " : ""}${dia(x.prazo + "T09:00")}</span></li>`;
+      }).join("");
+      return `<section class="tl-fase"><div class="tl-fh"><b>${esc(f.nome)}</b><span>${esc(f.descricao)}</span></div>
+        <div class="tl-fm">entrega até ${dia(fimFase(f))} · ${lista.filter((x) => x.status === "entregue").length} de ${lista.length} entregues</div><ol class="tl">${lis}</ol></section>`;
+    }).join("");
+    return `<h3>Linha do tempo</h3>
+      <p class="dr-instr">Escopo do contrato · ${c.secretarias} secretarias e ${c.processos} processos até ${dia(c.meta + "T09:00")}</p>
+      <div class="tl-sum"><span class="ok">${n("done")} entregues</span>${n("doing") ? `<span class="doing">${n("doing")} em andamento</span>` : ""}<span>${n("")} previstas</span>${n("late") ? `<span class="late">${n("late")} atrasada${n("late") > 1 ? "s" : ""}</span>` : ""}</div>
+      ${ganttHTML()}${fases}`;
+  }
+
+  // Implantador: cada tarefa da implantação na linha do tempo.
+  function linhaTempoHTML() {
+    if (ROLE === "c") return escopoHTML();
+    const c = S.cliente;
+    const todas = allTasks(), feitas = todas.filter((t) => t.feito).length, late = todas.filter(isLate).length;
     let hoje = false;
     const fases = S.fases.map((f) => {
       const lis = [...f.tasks].sort((a, b) => d(a.data) - d(b.data)).map((t) => {
@@ -407,9 +449,27 @@
     return `<h3>Linha do tempo</h3>
       <p class="dr-instr">${dia(c.inicio + "T09:00")} a ${dia(c.meta + "T09:00")} · 2 meses de implantação</p>
       <div class="tl-sum"><span class="ok">${feitas} feitas</span><span>${todas.length - feitas} a fazer</span>${late ? `<span class="late">${late} atrasada${late > 1 ? "s" : ""}</span>` : ""}</div>
-      <div class="gantt"><div class="gantt-track">${segs}<span class="gantt-now" style="left:${pos(now())}%"><span>Hoje</span></span></div>
-        <div class="gantt-axis"><span>${dia(c.inicio + "T09:00")} · início</span><span>${dia(c.meta + "T09:00")} · go-live</span></div></div>
-      ${fases}`;
+      ${ganttHTML()}${fases}`;
+  }
+
+  // O que depende da prefeitura agora: vídeos para validar e tarefas da equipe.
+  function todoItems() {
+    return [
+      ...vidsPend().map((v) => `<div class="todo"><span class="qi cyan">${I.video}</span><div class="qt"><b>Validar o vídeo do ${esc(v.processo)}</b><span>${v.alteracoes.length} mudanças · ${Math.round((steps(v) * STEP_MS) / 1000)} segundos</span></div><button class="btn sm" data-open="${v.id}">Assistir</button></div>`),
+      ...doCliente().map((t) => `<div class="todo ${isLate(t) ? "late" : ""}"><span class="qi ${isLate(t) ? "red" : "amber"}">${I.clipboard}</span><div class="qt"><b>${esc(t.titulo)}</b><span>${isLate(t) ? `Atrasada desde ${dia(t.data)}` : `Até ${dia(t.data)} às ${hora(t.data)}`}</span></div><div class="qa">${/enviar|devolver/i.test(t.titulo) ? `<label class="btn sm">${I.upload}Enviar<input type="file" hidden data-upload="${t.id}"></label>` : ""}<button class="btn sm ghost" data-task="${t.id}">Feito</button></div></div>`)
+    ];
+  }
+  function paraFazerHTML() {
+    return `<h3>Para fazer</h3>
+      <p class="dr-instr">O que depende de você. O resto a Aprova resolve.</p>
+      <div class="queue dr-q">${todoItems().join("") || `<p class="empty">Tudo em dia 🎉</p>`}</div>`;
+  }
+  function agendaHTML() {
+    const ag = proxReunioes(), re = S.reunioes.filter((r) => r.status === "realizada").sort((a, b) => d(b.data) - d(a.data));
+    return `<h3>Agenda de reunião</h3>
+      <p class="dr-instr">A pauta chega antes e o combinado fica por escrito.</p>
+      <div class="dr-sec">Próximas</div><div class="dr-reus">${ag.map((r) => reuniaoHTML(r)).join("") || `<p class="empty">Nenhuma reunião marcada.</p>`}</div>
+      ${re.length ? `<div class="dr-sec">Já aconteceram</div><div class="dr-reus">${re.map((r) => reuniaoHTML(r)).join("")}</div>` : ""}`;
   }
 
   function evitadaHTML() {
@@ -433,7 +493,7 @@
     return `<h3>O caminho até o go-live</h3>
       <p class="dr-instr">Meta: ${diaSem(c.meta + "T09:00")}</p>
       <div class="dr-big">${daysUntil(c.meta + "T09:00")}<small>dias para o go-live</small></div>
-      <div class="dr-alert ${sd}"><span class="saude ${sd}">${SAUDE[sd]}</span><p>${motivo}</p></div>
+      ${ROLE === "i" ? `<div class="dr-alert ${sd}"><span class="saude ${sd}">${SAUDE[sd]}</span><p>${motivo}</p></div>` : ""}
       <div class="dr-sec">Marcos até lá</div>
       <ul class="dr-list">${S.fases.map((f) => `<li><span>${esc(f.nome)} · ${esc(f.descricao)}<small>${f.tasks.filter((t) => t.feito).length} de ${f.tasks.length} feitas</small></span><b>${dia(fimFase(f))}</b></li>`).join("")}</ul>
       <div class="dr-sec">O que falta</div>
@@ -444,19 +504,31 @@
       ${atras.length ? `<div class="dr-sec">Atrasado</div><ul class="dr-list">${atras.map((t) => `<li class="late"><span>${esc(t.titulo)}<small>${DONO[ROLE][t.dono]}</small></span><b>${dia(t.data)}</b></li>`).join("")}</ul>` : ""}`;
   }
 
-  function openInfo(kind) {
-    if (AUTO) { toast("Espere o Automode terminar."); return; }
+  // INFO guarda qual detalhe está aberto: ele fecha clicando fora e se atualiza quando algo muda.
+  let INFO = null;
+  function renderInfo() {
+    const n = doCliente().length + vidsPend().length;
     const H = {
       entrega: [`Entrega · ${entrega()}%`, linhaTempoHTML],
+      pend: [`Com você · ${n}`, paraFazerHTML],
       reuniao: ["Reunião evitada", evitadaHTML],
-      golive: ["Go-live", goliveHTML]
-    }[kind];
+      golive: ["Go-live", goliveHTML],
+      agenda: ["Reuniões", agendaHTML]
+    }[INFO];
+    const dr = $("#drawer"), y = dr.scrollTop;
+    dr.innerHTML = `<div class="dr-h"><span class="dr-k">${I.chart}${H[0]}</span><button class="dr-x" data-drclose="1" aria-label="Fechar">${I.x}</button></div>` + H[1]();
+    dr.scrollTop = y;
+  }
+  function openInfo(kind) {
+    if (AUTO) { toast("Espere o Automode terminar."); return; }
     const dr = $("#drawer");
     clearTimeout(runT);
-    dr.innerHTML = `<div class="dr-h"><span class="dr-k">${I.chart}${H[0]}</span><button class="dr-x" data-drclose="1" aria-label="Fechar">${I.x}</button></div>` + H[1]();
-    dr.hidden = false;
+    INFO = kind;
     dr.scrollTop = 0;
-    requestAnimationFrame(() => dr.classList.add("on"));
+    renderInfo();
+    dr.hidden = false;
+    $("#scrim").hidden = false;
+    requestAnimationFrame(() => { dr.classList.add("on"); $("#scrim").classList.add("on"); });
   }
 
   VIEWS["i/visao"] = () => {
@@ -530,30 +602,13 @@
   };
 
   // ---------- telas da prefeitura ----------
+  // Início da prefeitura: saudação curta, os 4 cards (cada um abre o detalhe) e os atalhos do ai.aprova.
   VIEWS["c/inicio"] = () => {
     const c = S.cliente;
-    const tarefas = doCliente(), vids = vidsPend();
-    const n = tarefas.length + vids.length;
-    const prox = proxReunioes()[0];
-    const todo = [
-      ...vids.map((v) => `<div class="todo"><span class="qi cyan">${I.video}</span><div class="qt"><b>Validar o vídeo do ${esc(v.processo)}</b><span>${v.alteracoes.length} mudanças · ${Math.round((steps(v) * STEP_MS) / 1000)} segundos</span></div><button class="btn sm" data-open="${v.id}">Assistir</button></div>`),
-      ...tarefas.map((t) => `<div class="todo ${isLate(t) ? "late" : ""}"><span class="qi ${isLate(t) ? "red" : "amber"}">${I.clipboard}</span><div class="qt"><b>${esc(t.titulo)}</b><span>${isLate(t) ? `Atrasada desde ${dia(t.data)}` : `Até ${dia(t.data)} às ${hora(t.data)}`}</span></div><div class="qa">${/enviar|devolver/i.test(t.titulo) ? `<label class="btn sm">${I.upload}Enviar<input type="file" hidden data-upload="${t.id}"></label>` : ""}<button class="btn sm ghost" data-task="${t.id}">Feito</button></div></div>`)
-    ];
-    return hero(c.nome, `Olá, ${esc(c.contato)}.`, n ? `${n} coisa${n > 1 ? "s" : ""} depende${n > 1 ? "m" : ""} de você.` : "Nada depende de você hoje.", "") +
+    const n = doCliente().length + vidsPend().length;
+    return `<section class="phead hello"><h1>Olá, ${esc(c.contato)}.<span>${n ? `${n} coisa${n > 1 ? "s" : ""} depende${n > 1 ? "m" : ""} de você.` : "Nada depende de você hoje."}</span></h1></section>` +
       kpisHTML("c") +
-      `<div class="grid"><div class="col-main">
-          <div id="parafazer">${secTitle("Para fazer", "o resto a Aprova resolve")}
-          <div class="queue">${todo.join("") || `<p class="empty">Tudo em dia 🎉</p>`}</div></div>
-          <section class="ask left"><h2 class="ask-h">Por onde começamos?</h2><div data-ai="c"></div></section>
-        </div>
-        <aside class="col-side">
-          ${prox ? `<section class="card"><div class="card-h"><h3>Próxima reunião</h3></div>${reuniaoHTML(prox)}</section>` : ""}
-          <section class="card"><div class="card-h"><h3>Andamento</h3><a class="more" href="#/c/andamento">Ver ${I.right}</a></div>
-            <div class="prog-big"><span class="v">${entrega()}%</span><span class="hint">da implantação entregue · go-live ${dia(c.meta + "T09:00")}</span></div>
-            <div class="bar"><i style="width:${entrega()}%"></i></div>
-            <ul class="mini-fases">${S.fases.map((f) => `<li class="${f.status}"><span></span>${esc(f.nome)} · ${esc(f.descricao)}</li>`).join("")}</ul>
-          </section>
-        </aside></div>`;
+      `<section class="ask left"><h2 class="ask-h">Por onde começamos?</h2><div data-ai="c"></div></section>`;
   };
 
   VIEWS["c/andamento"] = () => hero("Andamento", "Como está a implantação.", `${entrega()}% entregue.`, "Marque aqui o que a sua equipe já fez. O que é da Aprova, a gente atualiza.") + fasesHTML();
@@ -581,27 +636,39 @@
         { ic: "whatsapp", t: "Cobrar pendências", d: "FUP de tudo que está atrasado na prefeitura." },
         { ic: "cal", t: "Montar pauta da próxima reunião", d: "Com o que falta decidir em cada processo." }
       ]
-    } : {
+    } : atalhosPrefeitura())));
+  }
+  // Atalhos da prefeitura: cada botão já manda o pedido pro ai.aprova; a conversa só abre quando precisa.
+  function atalhosPrefeitura() {
+    const vids = vidsPend().length;
+    const doc = doCliente().filter((t) => /enviar|devolver/i.test(t.titulo)).sort((a, b) => isLate(b) - isLate(a))[0];
+    return {
+      compacto: true,
       placeholder: "Escreva uma mensagem, grave um áudio ou anexe a lei…",
       sugs: [
-        { ic: "video", t: "Validar processos", d: "Abre os vídeos que estão esperando a sua aprovação." },
-        { ic: "form", t: "Alteração de Formulário", d: "Diga o que muda. Pode mandar PDF, foto ou áudio." },
-        { ic: "users", t: "Cadastro de Usuários", d: "Envia o link de cadastro para a sua equipe no WhatsApp." }
+        { ic: "video", t: "Validar processos", d: vids ? `${vids} vídeo${vids > 1 ? "s esperam" : " espera"} a sua aprovação.` : "Nenhum vídeo esperando agora.", msg: "Validar processos" },
+        { ic: "upload", t: doc ? `Enviar: ${doc.titulo.replace(/^(enviar|devolver)\s+(.)/i, (m, v, l) => l.toUpperCase())}` : "Enviar um documento", d: doc && isLate(doc) ? `Atrasado desde ${dia(doc.data)}. A Aprova identifica a pendência e dá baixa.` : "Lei, foto ou planilha. A Aprova identifica a pendência e dá baixa.", acao: "anexar", hot: doc && isLate(doc) },
+        { ic: "form", t: "Alterar um formulário", d: "Diga o que muda. Pode mandar PDF, foto ou áudio.", msg: "Quero alterar um formulário" },
+        { ic: "users", t: "Cadastrar minha equipe", d: "Envia o link de cadastro no WhatsApp.", msg: "Cadastro de usuários" },
+        { ic: "cal", t: "Próximo passo e prazos", d: "O que vem agora e quando é o go-live.", msg: "Qual o próximo passo e o prazo?" }
       ]
-    })));
+    };
   }
   function refresh() {
-    // Re-renderiza a tela sem perder a rolagem.
+    // Re-renderiza a tela sem perder a rolagem; um detalhe aberto na lateral acompanha.
     const y = window.scrollY;
     render();
     window.scrollTo(0, y);
+    if (INFO) renderInfo();
   }
 
   // ---------- ai.aprova (simulado na demo; em produção é o agente) ----------
-  function aiBox({ placeholder, sugs = [], ctx = null }) {
+  function aiBox({ placeholder, sugs = [], ctx = null, compacto = false }) {
     const box = document.createElement("div");
-    box.className = "ai";
-    box.innerHTML = `<div class="ai-log"></div>
+    box.className = compacto ? "ai compacto" : "ai";
+    const sugsHTML = sugs.length ? `<ul class="sugs">${sugs.map((s) => `<li><button type="button" class="sug ${s.hot ? "hot" : ""}" data-msg="${esc(s.msg || s.t)}"${s.acao ? ` data-acao="${s.acao}"` : ""}>${I[s.ic]}<b>${esc(s.t)}</b><span>${esc(s.d)}</span></button></li>`).join("")}</ul>` : "";
+    // Compacto: os atalhos vêm primeiro e a conversa fica atrás de um botão.
+    box.innerHTML = (compacto ? `${sugsHTML}<button type="button" class="ai-open">${I.chat}<span>Escrever para a Aprova</span><small>texto, áudio ou anexo</small></button><div class="ai-chat" hidden>` : "") + `<div class="ai-log"></div>
       <form class="box">
         <textarea rows="2" placeholder="${esc(placeholder)}" aria-label="Mensagem para o ai.aprova"></textarea>
         <div class="box-row">
@@ -613,9 +680,16 @@
           <button type="submit" class="send" title="Enviar">${I.up}</button>
         </div>
       </form>
-      ${sugs.length ? `<ul class="sugs">${sugs.map((s) => `<li><button type="button" class="sug" data-msg="${esc(s.msg || s.t)}">${I[s.ic]}<b>${esc(s.t)}</b><span>${esc(s.d)}</span></button></li>`).join("")}</ul>` : ""}`;
+      ${compacto ? "</div>" : sugsHTML}`;
     const logBox = $(".ai-log", box);
     const input = $("textarea", box);
+    const fileIn = $("input[type=file]", box);
+    const openChat = () => {
+      if (!compacto) return;
+      $(".ai-chat", box).hidden = false;
+      $(".ai-open", box).hidden = true;
+    };
+    if (compacto) $(".ai-open", box).addEventListener("click", () => { openChat(); input.focus(); });
     const say = (who, html, cls = "") => {
       const m = document.createElement("div");
       m.className = `msg ${who} ${cls}`;
@@ -635,11 +709,18 @@
     input.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input.value); } });
     box.querySelectorAll(".sug").forEach((b) => b.addEventListener("click", () => {
       if (b.dataset.msg === "__aprovar") return decide(ctx, "aprovado");
+      openChat();
+      if (b.dataset.acao === "anexar") {
+        say("bot", "Pode mandar a lei, a foto do formulário ou a planilha. Eu vejo a que pendência ela se refere e já dou baixa.");
+        fileIn.click();
+        return;
+      }
       send(b.dataset.msg);
     }));
-    $("input[type=file]", box).addEventListener("change", (e) => {
+    fileIn.addEventListener("change", (e) => {
       const f = e.target.files[0];
       if (!f) return;
+      openChat();
       const chip = document.createElement("div");
       chip.className = "file-chip";
       chip.textContent = "📎 " + f.name;
@@ -647,6 +728,18 @@
       const t = say("bot", "lendo o arquivo…", "typing");
       setTimeout(() => {
         t.remove();
+        const alvo = ROLE === "c" && casaPendencia(f.name);
+        if (alvo) {
+          alvo.feito = true;
+          log("ticket", `${S.cliente.contato} enviou "${f.name}": o agente identificou a pendência "${alvo.titulo}" e deu baixa${alvo.ticket ? ` no ${alvo.ticket}` : ""}`);
+          save();
+          // Só os cards e o menu mudam; re-renderizar a tela apagaria a conversa.
+          const k = $(".kpis");
+          if (k) k.outerHTML = kpisHTML(ROLE);
+          renderShell();
+          say("bot", `Recebi <b>${esc(f.name)}</b>. É o que faltava em <b>${esc(alvo.titulo)}</b>: já marquei como feito e anexei ao chamado. Obrigado!`);
+          return;
+        }
         const tk = novoTicket();
         log("ticket", `Arquivo "${f.name}" recebido pelo painel: regras extraídas e anexadas ao ${tk}`);
         save();
@@ -666,6 +759,18 @@
       }
     });
     return box;
+  }
+
+  // Qual pendência de envio o arquivo resolve: a que tiver mais palavras do título no nome do arquivo.
+  const semAcento = (s) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  function casaPendencia(nome) {
+    const n = semAcento(nome);
+    let best = null, nota = 0;
+    doCliente().filter((t) => /enviar|devolver/i.test(t.titulo)).forEach((t) => {
+      const pts = semAcento(t.titulo).split(/[^a-z0-9]+/).filter((w) => w.length > 3 && !/^(enviar|devolver)$/.test(w) && n.includes(w)).length;
+      if (pts > nota) { best = t; nota = pts; }
+    });
+    return best ? findTask(best.id) : null;
   }
 
   function responder(text, ctx) {
@@ -897,6 +1002,7 @@
     const p = plano(t);
     const dr = $("#drawer");
     clearTimeout(runT);
+    semInfo();
     dr.innerHTML = `<div class="dr-h"><span class="dr-k"><span class="pulse"></span>${prog ? `Automode · ${prog.i} de ${prog.n}` : "Agente executando"}</span><button class="dr-x" data-drclose="1" aria-label="Fechar">${I.x}</button></div>
       <h3>${esc(t.titulo)}</h3>
       <p class="dr-instr">Seguindo <a href="${REPO}${p.instr}.md" target="_blank" rel="noopener">${p.instr}</a>${t.ticket ? ` · ${esc(t.ticket)}` : ""}</p>
@@ -936,6 +1042,7 @@
     v.proposta = v.proposta || proposta(v);
     const dr = $("#drawer");
     clearTimeout(runT);
+    semInfo();
     dr.innerHTML = `<div class="dr-h"><span class="dr-k">${I.spark}Alteração do agente</span><button class="dr-x" data-drclose="1" aria-label="Fechar">${I.x}</button></div>
       <h3>${esc(v.processo)}</h3>
       <p class="dr-instr">Seguindo <a href="${REPO}04-videos-validacao.md" target="_blank" rel="noopener">04-videos-validacao</a> · ${esc(v.ticket)}</p>
@@ -1015,7 +1122,15 @@
     toast("Automode desligado. O agente parou.");
   }
   const autoBtn = () => `<button class="auto ${AUTO ? "on" : ""}" data-auto="1" aria-pressed="${AUTO}"><span class="sw"></span><b>Automode</b><small>${AUTO ? "executando…" : "o agente faz sozinho"}</small></button>`;
+  // A lateral passa a mostrar outra coisa (execução do agente): deixa de ser um detalhe de indicador.
+  function semInfo() {
+    INFO = null;
+    const sc = $("#scrim");
+    sc.classList.remove("on");
+    sc.hidden = true;
+  }
   function closeDrawer() {
+    semInfo();
     if (AUTO) { AUTO = false; refresh(); }
     const dr = $("#drawer");
     dr.classList.remove("on");
@@ -1042,13 +1157,11 @@
       go(x.dataset.role, ROUTES[x.dataset.role][x.dataset.role === "i" ? 1 : 0].id);
       return;
     }
+    if (e.target.id === "scrim") { closeDrawer(); return; }
     if ((x = el("[data-kpi]"))) {
-      if (x.dataset.kpi !== "pend") { openInfo(x.dataset.kpi); return; }
-      // "Com você" leva ao que falta fazer: a fila no implantador, a lista "Para fazer" na prefeitura.
-      if (ROLE === "i") { go("i", "fila"); return; }
-      const q = $("#parafazer");
-      q.scrollIntoView({ behavior: "smooth", block: "start" });
-      q.classList.remove("flash"); void q.offsetWidth; q.classList.add("flash");
+      // No implantador, "Com a prefeitura" leva à fila; o resto abre o detalhe na lateral.
+      if (x.dataset.kpi === "pend" && ROLE === "i") { go("i", "fila"); return; }
+      openInfo(x.dataset.kpi);
       return;
     }
     if ((x = el("[data-run]"))) { runAgent(x.dataset.run); return; }
@@ -1163,6 +1276,7 @@
   window.addEventListener("hashchange", () => { parseHash(); render(); window.scrollTo(0, 0); });
 
   // ---------- início ----------
+  document.body.insertAdjacentHTML("beforeend", '<div class="scrim" id="scrim" hidden></div>');
   parseHash();
   if (!location.hash) history.replaceState(null, "", `#/${ROLE}/${PAGE}`);
   render();

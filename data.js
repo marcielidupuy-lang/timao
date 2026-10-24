@@ -17,6 +17,28 @@ window.DATA = {
     saude: "risco"
   },
 
+  // Escopo do contrato: o que a Aprova entrega em cada fase (12 secretarias, 98 processos).
+  // status: entregue | andamento | previsto. Passou do prazo sem entregar, a tela mostra como atrasada.
+  escopo: {
+    f1: [
+      { t: "Kickoff e plano de implantação", d: "cronograma, responsáveis e cidade modelo", prazo: "2026-10-09", status: "entregue" },
+      { t: "Champions das 12 secretarias", d: "um responsável por secretaria", prazo: "2026-10-14", status: "entregue" },
+      { t: "Usuários da Secretaria de Obras", d: "14 analistas com acesso ao prefeitura.aprova", prazo: "2026-10-25", status: "andamento" },
+      { t: "Processos da Secretaria de Obras no ar", d: "18 processos: Alvará, Habite-se, Certidão de Uso do Solo…", prazo: "2026-10-30", status: "andamento" },
+      { t: "Treinamento da Secretaria de Obras", d: "analistas usando os novos processos", prazo: "2026-10-30", status: "previsto" }
+    ],
+    f2: [
+      { t: "Processos da Fazenda no ar", d: "22 processos: ITBI, Certidão Negativa, Revisão de IPTU…", prazo: "2026-11-10", status: "previsto" },
+      { t: "Processos da Saúde e da Educação no ar", d: "24 processos", prazo: "2026-11-14", status: "previsto" },
+      { t: "Formulários clonados validados", d: "24 formulários da cidade modelo ajustados e aprovados", prazo: "2026-11-14", status: "previsto" }
+    ],
+    f3: [
+      { t: "Processos das demais secretarias no ar", d: "34 processos em 8 secretarias", prazo: "2026-11-24", status: "previsto" },
+      { t: "Treinamento dos analistas", d: "todas as secretarias", prazo: "2026-11-24", status: "previsto" },
+      { t: "Go-live da prefeitura toda", d: "98 processos no ar", prazo: "2026-11-30", status: "previsto" }
+    ]
+  },
+
   // De onde vêm as horasReuniaoEvitadas (a soma tem que bater).
   evitadas: [
     { t: "Validação por vídeo", d: "6 formulários validados sem call", h: 12 },
