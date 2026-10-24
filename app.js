@@ -84,8 +84,8 @@
     clip: sv('<path d="M20.5 11.5l-8.2 8.2a5 5 0 01-7-7l8.6-8.6a3.4 3.4 0 014.8 4.8l-8.4 8.4a1.8 1.8 0 01-2.6-2.6l7.8-7.8"/>'),
     upload: sv('<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/>'),
     sparkle: sv('<path d="M12 4v4M12 16v4M4 12h4M16 12h4M7 7l2 2M15 15l2 2M7 17l2-2M15 9l2-2"/>'),
-    logo: '<svg viewBox="0 0 40 40" class="sc-logo"><path d="M10 33L20 8l10 25" stroke="#111" stroke-width="3.4" fill="none"/><path d="M2 22h36" stroke="#14c3d6" stroke-width="3.2"/></svg>',
-    logoSm: '<svg viewBox="0 0 40 40"><path d="M10 33L20 8l10 25" stroke="#111" stroke-width="3.4" fill="none"/><path d="M2 22h36" stroke="#14c3d6" stroke-width="3.2"/></svg>'
+    logo: '<svg viewBox="0 0 40 40" class="sc-logo"><path d="M10 33L20 8l10 25" stroke="#111" stroke-width="3.4" fill="none"/><path d="M2 22h36" stroke="#00dce8" stroke-width="3.2"/></svg>',
+    logoSm: '<svg viewBox="0 0 40 40"><path d="M10 33L20 8l10 25" stroke="#111" stroke-width="3.4" fill="none"/><path d="M2 22h36" stroke="#00dce8" stroke-width="3.2"/></svg>'
   };
   const GATILHO = {
     prazo: { ic: I.clock, nome: "Prazo vencido", instr: "03-fup-whatsapp" },
@@ -146,6 +146,10 @@
   const doCliente = () => allTasks().filter((t) => t.dono === "prefeitura" && !t.feito && t.fase.status === "ativa");
   const minhas = () => allTasks().filter((t) => t.dono !== "prefeitura" && !t.feito && t.fase.status === "ativa");
   const semResposta = () => allTasks().filter((t) => t.dono === "prefeitura" && isLate(t));
+  // Os três lados da carteira: o que depende de mim, do cliente e do agente.
+  const daAprova = () => minhas().filter((t) => t.dono === "aprova");
+  const doAgente = () => minhas().filter((t) => t.dono === "agente");
+  const comigo = () => [...ajustes(), ...daAprova()];
   const proxReunioes = () => S.reunioes.filter((r) => r.status === "agendada").sort((a, b) => d(a.data) - d(b.data));
   function log(gatilho, texto) { S.atividade.unshift({ hora: isoNow(), gatilho, texto, novo: true }); }
   let ticketSeq = 18380;
@@ -155,11 +159,9 @@
   const ROUTES = {
     i: [
       { id: "carteira", nome: "Minha carteira", ic: "layers", geral: true },
-      { id: "visao", nome: "Visão geral", ic: "home" },
-      { id: "fila", nome: "Minha fila", ic: "clipboard", badge: () => ajustes().length + minhas().length + semResposta().length },
+      { id: "visao", nome: "Visão geral", ic: "home", badge: () => comigo().length },
       { id: "fases", nome: "Fases e tarefas", ic: "form" },
-      { id: "reunioes", nome: "Reuniões", ic: "meet" },
-      { id: "agenda", nome: "Agenda", ic: "cal" },
+      { id: "agenda", nome: "Agenda e reuniões", ic: "cal" },
       { id: "validacoes", nome: "Validações", ic: "video", badge: () => ajustes().length },
       { id: "usuarios", nome: "Usuários", ic: "users" },
       { id: "agente", nome: "Agente", ic: "bolt" }
@@ -173,7 +175,11 @@
   };
   const rotas = (role) => ROUTES[role].filter((r) => !r.bloco || PN().blocos[r.bloco]);
   let ROLE = "i", PAGE = "carteira";
+  // Telas que viraram parte de outra: a fila foi pra carteira e as reuniões, pra agenda.
+  const JUNTADAS = { "i/fila": "i/carteira", "i/reunioes": "i/agenda" };
   function parseHash() {
+    const velha = location.hash.match(/^#\/(i\/[a-z]+)/);
+    if (velha && JUNTADAS[velha[1]]) { history.replaceState(null, "", "#/" + JUNTADAS[velha[1]]); }
     const m = location.hash.match(/^#\/(i|c)\/([a-z]+)/);
     if (m && rotas(m[1]).some((r) => r.id === m[2])) { ROLE = m[1]; PAGE = m[2]; return; }
     // Tela que não existe mais ou que a implantadora desligou: fica na mesma visão, na primeira tela.
@@ -190,8 +196,9 @@
     const rail = ["chat", "docok", "users", "money", "form", "clipboard", "building", "chart"];
     $("#railIcons").innerHTML = rail.map((k) => `<span class="rail-btn ${k === "form" ? "on" : ""}">${I[k]}</span>`).join("");
     $("#railBell").innerHTML = I.bell;
+    // Na carteira nenhum cliente está aberto: os botões do cliente só aparecem dentro dele.
     $(".role").innerHTML = ROLE === "i"
-      ? `<button class="btn sm ghost" data-preview="edit">${I.pencil}Editar painel do cliente</button><button class="btn sm" data-preview="1">${I.ext}Abrir painel do cliente</button>`
+      ? (PAGE === "carteira" ? "" : `${autoBtn()}<button class="btn sm ghost" data-preview="edit">${I.pencil}Editar painel do cliente</button><button class="btn sm" data-preview="1">${I.ext}Abrir painel do cliente</button>`)
       : preview() ? `<span class="prev-tag">${I.eye}Você está vendo o painel da prefeitura</span>${EDIT ? "" : `<button class="btn sm ghost" data-edit="1">${I.pencil}Editar painel</button>`}<button class="btn sm ghost" data-back="1">Voltar ao implantador</button>` : "";
     $("#avatar").textContent = ROLE === "i" ? "MD" : "AR";
     const c = S.cliente;
@@ -373,31 +380,74 @@
 
   // ---------- telas do implantador ----------
   const VIEWS = {};
+  // ---------- carteira: as implantações e, embaixo, tudo que está parado em um quadro só ----------
+  // Vale Verde vem do estado vivo (os botões funcionam); as outras vêm do resumo fixo do data.js.
+  const LADOS = [
+    ["mim", "Comigo", "o que só você resolve"],
+    ["cliente", "Com os clientes", "o agente cobra no WhatsApp"],
+    ["agente", "Com o agente", "a seta executa; o Automode roda todas"]
+  ];
+  let CART_F = "todas";
+  const CART_MAIS = new Set();
+  function filaVV() {
+    const cid = S.cliente.nome.replace("Prefeitura de ", "");
+    const vids = vidsPend();
+    const cli = [...doCliente()].sort((a, b) => (isLate(b) - isLate(a)) || (d(a.data) - d(b.data)));
+    return [
+      ...ajustes().map((v) => ({ lado: "mim", ic: "x", tom: "red", urg: true, t: `${v.processo}: ${v.status === "ajuste" ? "agente ajustando" : "ajuste pedido"}`, s: `“${v.comentario || ""}”`, acao: `<button class="btn sm" data-revisar="${v.id}">${I.bolt}Verificar e criar vídeo</button>` })),
+      ...daAprova().map((t) => ({ lado: "mim", ic: /reuni|revisar/i.test(t.titulo) ? "meet" : "clipboard", tom: isLate(t) ? "red" : "", urg: isLate(t), t: t.titulo, s: `${isLate(t) ? "atrasada · " : "até "}${dia(t.data)} às ${hora(t.data)}${t.ticket ? " · " + t.ticket : ""}`, acao: `<button class="btn sm ghost" data-task="${t.id}">Concluir</button>` })),
+      ...cli.map((t) => isLate(t)
+        ? { lado: "cliente", ic: "clock", tom: "red", urg: true, t: t.titulo, s: `atrasada desde ${dia(t.data)} · ${t.fupEm ? "FUP enviado " + rel(t.fupEm) : "agente cobrou no WhatsApp"}`, acao: `<button class="btn sm ghost" data-cobrar="${t.id}">${I.whatsapp}Cobrar</button>` }
+        : { lado: "cliente", ic: "clipboard", tom: "amber", t: t.titulo, s: `até ${dia(t.data)} às ${hora(t.data)}` }),
+      ...(vids.length ? [{ lado: "cliente", ic: "video", tom: "cyan", t: `Validar ${vids.length} vídeo${vids.length > 1 ? "s" : ""}`, s: vids.map((v) => v.processo).join(", "), acao: `<button class="btn sm ghost" data-open="${vids[0].id}">Ver</button>` }] : []),
+      ...doAgente().map((t) => ({ lado: "agente", ic: "bolt", tom: "cyan", t: t.titulo, s: `até ${dia(t.data)} às ${hora(t.data)}${t.ticket ? " · " + t.ticket : ""}`, acao: `<button class="run" data-run="${t.id}" title="Executar com o agente" aria-label="Executar com o agente">${I.right}</button>` }))
+    ].map((x) => ({ ...x, cid }));
+  }
+  const ORDEM_SAUDE = { risco: 0, atencao: 1, ok: 2 };
+  function carteiraTodas() {
+    const c = S.cliente;
+    const vv = { nome: c.nome.replace("Prefeitura de ", ""), uf: c.uf, fase: `${ativa() ? ativa().nome : ""} · Obras`, pct: entrega(), proxima: proxReunioes()[0] && proxReunioes()[0].data, meta: c.meta, saude: saudeVV(), aberta: true, fila: filaVV() };
+    const outras = (window.DATA.carteira || []).map((p) => ({ ...p, fila: (p.fila || []).map((x) => ({ ...x, cid: p.nome, acao: `<button class="btn sm ghost" data-outra="1">Abrir</button>` })) }));
+    return [vv, ...outras].sort((a, b) => ORDEM_SAUDE[a.saude] - ORDEM_SAUDE[b.saude]);
+  }
+  const ring = (pct) => `<span class="ring" style="--p:${pct}"><b>${pct}%</b></span>`;
+  function pcardHTML(p) {
+    const n = (lado) => p.fila.filter((x) => x.lado === lado).length;
+    const urg = p.fila.filter((x) => x.urg).length;
+    const corpo = `<div class="pc-top">${ring(p.pct)}<div class="pc-name"><b>${esc(p.nome)} · ${p.uf}</b><small>${esc(p.fase)}</small></div></div>
+      <span class="saude ${p.saude}">${SAUDE[p.saude]}${urg ? ` · ${urg} urgente${urg > 1 ? "s" : ""}` : ""}</span>
+      <div class="pc-nums"><span><b>${n("mim")}</b>comigo</span><span><b>${n("cliente")}</b>com o cliente</span><span><b>${n("agente")}</b>com o agente</span></div>
+      <div class="pc-foot"><span>${p.proxima ? `${I.cal}${dia(p.proxima)} · ${hora(p.proxima)}` : "Sem reunião"}</span><span>go-live ${dia(p.meta + "T09:00")}</span></div>`;
+    return p.aberta
+      ? `<a class="pcard s-${p.saude}" href="#/i/visao" title="Abrir ${esc(p.nome)}">${corpo}</a>`
+      : `<button type="button" class="pcard s-${p.saude}" data-outra="1" title="Abrir ${esc(p.nome)}">${corpo}</button>`;
+  }
+  function bitemHTML(x, comCidade) {
+    return `<div class="bitem ${x.urg ? "urg" : ""}"><span class="qi ${x.tom || ""}">${I[x.ic] || I.dot}</span><div class="qt">${comCidade ? `<span class="cid">${esc(x.cid)}</span>` : ""}<b>${esc(x.t)}</b><span>${esc(x.s)}</span></div>${x.acao ? `<div class="qa">${x.acao}</div>` : ""}</div>`;
+  }
+  function quadroHTML(itens, comCidade, limite = 6) {
+    return `<div class="board">${LADOS.map(([k, nome, hint]) => {
+      const lista = itens.filter((x) => x.lado === k).sort((a, b) => (b.urg ? 1 : 0) - (a.urg ? 1 : 0));
+      const aberta = CART_MAIS.has(k) || lista.length <= limite;
+      return `<section class="bcol b-${k}"><div class="bcol-h"><span class="bdot"></span><h3>${nome}</h3><span class="bn">${lista.length}</span><span class="hint">${hint}</span></div>
+        <div class="bcol-l">${(aberta ? lista : lista.slice(0, limite)).map((x) => bitemHTML(x, comCidade)).join("") || `<p class="empty">Nada aqui 🎉</p>`}
+        ${aberta ? "" : `<button class="link bmais" data-cartmais="${k}">Ver mais ${lista.length - limite}</button>`}</div></section>`;
+    }).join("")}</div>`;
+  }
   VIEWS["i/carteira"] = () => {
     const c = S.cliente;
-    const vv = { nome: c.nome.replace("Prefeitura de ", ""), uf: c.uf, fase: `${ativa() ? ativa().nome : ""} · Obras`, pct: entrega(), atrasadas: semResposta().length, videos: vidsPend().length, ajustes: ajustes().length, proxima: proxReunioes()[0] && proxReunioes()[0].data, saude: saudeVV(), aberta: true };
-    const todas = [vv, ...S.carteira];
+    const todas = carteiraTodas();
+    if (CART_F !== "todas" && !todas.some((p) => p.nome === CART_F)) CART_F = "todas";
+    const itens = todas.flatMap((p) => p.fila);
     const atencao = todas.filter((p) => p.saude !== "ok").length;
-    const sum = (k) => todas.reduce((a, p) => a + p[k], 0);
-    return hero("Minha carteira", `${saudacao()}, ${esc(c.implantador.split(" ")[0])}.`, `${todas.length} implantações, ${atencao} pedem atenção.`, "Prefeituras inteiras ao mesmo tempo: o agente cuida das cobranças, das pautas e dos vídeos.") +
-      `<section class="kpis">
-        ${kpi("Implantações", todas.length, "prefeitura toda")}
-        ${kpi("Ajustes pra você", sum("ajustes"), "pedidos pelas prefeituras", sum("ajustes") ? "alert" : "good")}
-        ${kpi("Vídeos com as prefeituras", sum("videos"), "aguardando validação")}
-        ${kpi("Reunião evitada", "74h", "nas 4 implantações", "good")}
-      </section>` +
-      `<div class="block-sm">${secTitle("Implantações", "ordenadas por quem precisa de você")}<div class="pgrid">${todas.sort((a, b) => ({ risco: 0, atencao: 1, ok: 2 }[a.saude] - { risco: 0, atencao: 1, ok: 2 }[b.saude])).map((p) => `
-        <div class="pcard">
-          <div class="pc-h"><b>${esc(p.nome)} · ${p.uf}</b><span class="saude ${p.saude}">${SAUDE[p.saude]}</span></div>
-          <div class="pc-f">${esc(p.fase)}</div>
-          <div class="pc-bar"><div class="bar"><i style="width:${p.pct}%"></i></div><span>${p.pct}%</span></div>
-          <div class="pc-chips">
-            <span class="${p.ajustes ? "hot" : ""}">${p.ajustes} ajuste${p.ajustes === 1 ? "" : "s"} pra você</span>
-            <span class="${p.atrasadas ? "warn" : ""}">${p.atrasadas} atrasada${p.atrasadas === 1 ? "" : "s"} na prefeitura</span>
-            <span>${p.videos} vídeo${p.videos === 1 ? "" : "s"} em validação</span>
-          </div>
-          <div class="pc-foot"><span class="hint">${p.proxima ? `Próxima reunião ${dia(p.proxima)} · ${hora(p.proxima)}` : "Sem reunião marcada"}</span>${p.aberta ? `<a class="btn sm" href="#/i/visao">Abrir</a>` : `<button class="btn sm ghost" data-outra="1">Abrir</button>`}</div>
-        </div>`).join("")}</div></div>`;
+    const n = (lado) => itens.filter((x) => x.lado === lado).length;
+    const vis = CART_F === "todas" ? itens : itens.filter((x) => x.cid === CART_F);
+    const chips = [["todas", `Todas · ${itens.length}`], ...todas.map((p) => [p.nome, `${p.nome} · ${p.fila.length}`])];
+    return hero("Minha carteira", `${saudacao()}, ${esc(c.implantador.split(" ")[0])}.`, `${todas.length} implantações, ${atencao} pedem atenção.`, `${n("mim")} coisas com você, ${n("cliente")} com os clientes e ${n("agente")} com o agente. 74h de reunião evitada nas ${todas.length} implantações.`) +
+      `<div class="pgrid">${todas.map(pcardHTML).join("")}</div>` +
+      `<div class="block-sm">${secTitle("O que está parado", "de todas as implantações, num lugar só")}
+        <div class="filters left" role="tablist">${chips.map(([k, l]) => `<button role="tab" data-cartf="${esc(k)}" aria-selected="${k === CART_F}">${esc(l)}</button>`).join("")}</div>
+        ${quadroHTML(vis, CART_F === "todas")}</div>`;
   };
 
   // Indicadores da implantação: os mesmos nas duas visões, só muda quem é "a prefeitura"
@@ -574,59 +624,23 @@
 
   VIEWS["i/visao"] = () => {
     const c = S.cliente;
-    const fila = filaItems().slice(0, 4);
     const prox = proxReunioes();
-    return hero(`${ativa() ? ativa().nome + " em andamento" : "Implantação"}`, `${esc(c.nome)}.`, "Implantação da prefeitura toda.", `${c.secretarias} secretarias · ${c.processos} processos · champion ${esc(c.champion)} · Pylon ${esc(c.pylon)}`) +
+    const sd = saudeVV();
+    return `<section class="phead entry vg-head"><h1>${esc(c.nome)}.<span>${ativa() ? esc(ativa().nome) + " em andamento" : "Implantação da prefeitura toda."}</span></h1>
+        <p><span class="saude ${sd}">${SAUDE[sd]}</span><span class="sep">·</span>${c.secretarias} secretarias · ${c.processos} processos · champion ${esc(c.champion)} · Pylon ${esc(c.pylon)}</p></section>` +
       `<div class="split">
         <div class="split-l">
           ${kpisHTML("i")}
-          <div class="block-sm">${secTitle("Sua fila", `${filaItems().length} itens`, `<a class="more" href="#/i/fila">Ver tudo ${I.right}</a>`)}
-          <div class="queue">${fila.map(filaItemHTML).join("") || `<p class="empty">Nada na sua fila 🎉</p>`}</div></div>
-          <div class="block-sm">${secTitle("Próximas reuniões", "", `<a class="more" href="#/i/agenda">Agenda ${I.right}</a>`)}<div class="reu-grid">${prox.slice(0, 2).map((r) => reuniaoHTML(r, false)).join("")}</div></div>
+          <div class="block-sm">${secTitle("Próximas reuniões", "", `<a class="more" href="#/i/agenda">Agenda ${I.right}</a>`)}<div class="reu-grid">${prox.slice(0, 2).map((r) => reuniaoHTML(r, false)).join("") || `<p class="empty">Nenhuma reunião marcada.</p>`}</div></div>
           <div class="block-sm"><section class="card"><div class="card-h"><h3>Agente em ação</h3><span class="live"><span class="dot"></span>ao vivo</span></div>${feedHTML(5)}<a class="more" href="#/i/agente">Execuções do agente ${I.right}</a></section></div>
         </div>
         <aside class="split-r"><section class="chat-card"><h2 class="ask-h">O que o agente faz por você agora?</h2><div data-ai="i"></div></section></aside>
-      </div>`;
+      </div>
+      <div class="block-sm" id="quadro">${secTitle("Com quem está cada coisa", "nesta implantação", `<a class="more" href="#/i/carteira">Ver a carteira toda ${I.right}</a>`)}${quadroHTML(filaVV(), false, 5)}</div>`;
   };
 
+  VIEWS["i/fases"] = () => hero("Fases e tarefas", "Fases da implantação.", "Tudo que está previsto.", "Você conclui o que é da Aprova. O que é da prefeitura, ela marca no painel dela.") + `<div class="sec-title"><span class="hint">Clique na seta → de uma tarefa do agente pra ele executar. Pra várias de uma vez, ligue o Automode no topo (as marcadas em <a href="#/i/agente">Agente</a>).</span></div>` + fasesHTML();
 
-  function filaItems() {
-    return [
-      ...ajustes().map((v) => ({ tipo: "ajuste", v })),
-      ...semResposta().map((t) => ({ tipo: "cobrar", t })),
-      ...minhas().map((t) => ({ tipo: "tarefa", t }))
-    ];
-  }
-  function filaItemHTML(it) {
-    if (it.tipo === "ajuste") {
-      const v = it.v;
-      return `<div class="qitem"><span class="qi red">${I.x}</span><div class="qt"><b>${esc(v.processo)}: ${v.status === "ajuste" ? "agente ajustando" : "ajuste pedido"}</b><span>“${esc(v.comentario || "")}” · ${esc(v.ticket)}</span></div><div class="qa"><button class="btn sm ghost" data-open="${v.id}">Ver vídeo</button><button class="btn sm" data-revisar="${v.id}">${I.bolt}Verificar alteração e criar vídeo</button></div></div>`;
-    }
-    const t = it.t;
-    if (it.tipo === "cobrar") {
-      const fup = t.fupEm ? `FUP enviado ${rel(t.fupEm)}` : "agente cobrou no WhatsApp";
-      return `<div class="qitem"><span class="qi amber">${I.clock}</span><div class="qt"><b>Prefeitura atrasada: ${esc(t.titulo)}</b><span>prazo ${dia(t.data)} · ${fup}</span></div><div class="qa"><button class="btn sm ghost" data-cobrar="${t.id}">Cobrar de novo</button></div></div>`;
-    }
-    return `<div class="qitem"><span class="qi">${t.dono === "agente" ? I.bolt : I.clipboard}</span><div class="qt"><b>${esc(t.titulo)}</b><span>${DONO.i[t.dono]} · ${dia(t.data)} ${hora(t.data)}${t.ticket ? " · " + esc(t.ticket) : ""}</span></div><div class="qa">${t.dono === "agente" ? `<button class="btn sm" data-run="${t.id}">Executar ${I.right}</button>` : `<button class="btn sm ghost" data-task="${t.id}">Concluir</button>`}</div></div>`;
-  }
-
-  VIEWS["i/fila"] = () => {
-    const a = ajustes(), s = semResposta(), m = minhas();
-    const grp = (t, hint, list) => `<div class="block-sm">${secTitle(t, hint)}<div class="queue">${list.map(filaItemHTML).join("") || `<p class="empty">Nada aqui.</p>`}</div></div>`;
-    return hero("Minha fila", "O que é seu.", "O resto o agente resolve.", "Ajustes pedidos pela prefeitura, cobranças que precisam de você e tarefas da Aprova.") +
-      grp("Ajustes pedidos pela prefeitura", "viram vídeo novo para validar", a.map((v) => ({ tipo: "ajuste", v }))) +
-      grp("Prefeitura atrasada", "o agente já mandou FUP; depois de 2 sem resposta, é com você", s.map((t) => ({ tipo: "cobrar", t }))) +
-      `<div class="block-sm">${secTitle("Tarefas da Aprova e do agente", "", `<a class="more" href="#/i/agente">Automode ${I.right}</a>`)}<div class="queue">${m.map((t) => filaItemHTML({ tipo: "tarefa", t })).join("") || `<p class="empty">Nada aqui.</p>`}</div></div>`;
-  };
-
-  VIEWS["i/fases"] = () => hero("Fases e tarefas", "Fases da implantação.", "Tudo que está previsto.", "Você conclui o que é da Aprova. O que é da prefeitura, ela marca no painel dela.") + `<div class="sec-title"><span class="hint">Clique na seta → de uma tarefa do agente pra ele executar. Pra várias de uma vez, use o Automode em <a href="#/i/agente">Agente</a>.</span></div>` + fasesHTML();
-
-  VIEWS["i/reunioes"] = () => {
-    const ag = proxReunioes(), re = S.reunioes.filter((r) => r.status === "realizada").sort((a, b) => d(b.data) - d(a.data));
-    return hero("Reuniões", "Menos reuniões.", "As que sobram rendem mais.", `O agente monta a pauta, confirma na véspera e transforma o que foi falado em acionáveis.`) +
-      `<div class="block-sm">${secTitle("Agendadas", "", `<button class="btn sm" data-novareuniao="1">${I.plus}Nova reunião com pauta do agente</button>`)}<div class="reu-grid">${ag.map((r) => reuniaoHTML(r)).join("") || `<p class="empty">Nenhuma reunião marcada.</p>`}</div></div>
-       <div class="block-sm">${secTitle("Realizadas", "acionáveis já criados pelo agente")}<div class="reu-grid">${re.map((r) => reuniaoHTML(r)).join("")}</div></div>`;
-  };
 
   VIEWS["i/validacoes"] = () => `<section class="big-h"><p class="eyebrow"><span class="dot-c"></span>Validações</p><h2>Cada ajuste vira um vídeo.<span>A prefeitura aprova sem reunião.</span></h2><p class="lead">Quando pedem mudança, ela cai aqui com o comentário. Gere o vídeo novo e ele volta pra prefeitura.</p></section>` + validacoesHTML();
 
@@ -640,11 +654,11 @@
     // Por padrão vêm marcadas as da fase ativa; as das próximas fases ficam desmarcadas.
     if (!SEL) SEL = new Set(pend.filter((t) => t.fase.status === "ativa").map((t) => t.id));
     const nSel = pend.filter((t) => SEL.has(t.id)).length;
-    return hero("Agente", "Execuções do agente.", "Selecione e ligue o Automode.", "O agente executa as marcadas, uma atrás da outra, seguindo as instruções da pasta INSTRUCTIONS.") +
+    return hero("Agente", "Execuções do agente.", "Marque e ligue o Automode.", "O Automode fica no topo da tela. Ligado, o agente executa as marcadas, uma atrás da outra, seguindo as instruções da pasta INSTRUCTIONS.") +
       `<div class="grid"><div class="col-main">
         <section class="card exec">
           <div class="card-h"><h3>Para o agente executar</h3><span class="hint">${nSel} de ${pend.length} selecionada${nSel === 1 ? "" : "s"}</span></div>
-          <div class="exec-bar"><button class="link" data-selall="${nSel === pend.length ? "0" : "1"}">${nSel === pend.length ? "Desmarcar todas" : "Marcar todas"}</button>${autoBtn()}</div>
+          <div class="exec-bar"><button class="link" data-selall="${nSel === pend.length ? "0" : "1"}">${nSel === pend.length ? "Desmarcar todas" : "Marcar todas"}</button><span class="hint">${AUTO ? "Automode ligado: executando as marcadas." : "Ligue o Automode no topo pra rodar as marcadas."}</span></div>
           <ul class="exec-list">${pend.map((t) => `<li class="${t.id === CUR ? "running" : ""}">
             <label class="ck"><input type="checkbox" data-sel="${t.id}" ${SEL.has(t.id) ? "checked" : ""} ${AUTO ? "disabled" : ""}><span></span></label>
             <div class="qt"><b>${esc(t.titulo)}</b><span>${esc(t.fase.nome)} · ${dia(t.data)} ${hora(t.data)}${t.ticket ? " · " + esc(t.ticket) : ""} · ${plano(t).instr}</span></div>
@@ -713,7 +727,8 @@
   const evClasse = (e) => `${e.late ? "late" : e.tipo}${e.feito ? " feito" : ""}`;
   const evLinha = (e, comDia) => `<li><span class="ag-dot ${evClasse(e)}"></span><span class="ag-t"><b>${esc(e.t)}</b><small>${comDia ? `${diaSem(e.iso)} · ` : ""}${esc(e.s)}</small></span><span class="ag-k ${evClasse(e)}">${e.late ? "atrasado" : e.feito ? "feito" : tipoNome(e.tipo)}</span></li>`;
 
-  VIEWS["c/agenda"] = () => {
+  VIEWS["c/agenda"] = () => hero("Agenda", "Agenda.", "Entregas, reuniões e prazos.", "Tudo que tem data na implantação, num lugar só. Clique num dia para ver o que tem nele.") + calHTML();
+  function calHTML() {
     if (!CAL) { const n = now(); CAL = { y: n.getFullYear(), m: n.getMonth(), sel: ymd(n) }; }
     const ev = eventosAgenda(), porDia = {};
     ev.forEach((e) => (porDia[e.iso.slice(0, 10)] = porDia[e.iso.slice(0, 10)] || []).push(e));
@@ -725,14 +740,13 @@
         <span class="n">${x.getDate()}</span><span class="cal-evs">${lista.slice(0, 4).map((e) => `<i class="ev ${evClasse(e)}">${e.tipo === "reuniao" ? `<em>${hora(e.iso)}</em>` : ""}${esc(e.t)}</i>`).join("")}${lista.length > 4 ? `<i class="mais">+${lista.length - 4} mais</i>` : ""}</span></button>`;
     }).join("");
     // Só o calendário, grande; o que tem em cada dia abre num modal no meio da tela.
-    return hero("Agenda", "Agenda.", "Entregas, reuniões e prazos.", "Tudo que tem data na implantação, num lugar só. Clique num dia para ver o que tem nele.") +
-      `<div class="ag-full">
+    return `<div class="ag-full">
         <div class="cal-h"><h2>${first.toLocaleDateString("pt-BR", { month: "long", year: "numeric" }).replace(/^./, (l) => l.toUpperCase())}</h2>
           <button class="btn sm ghost" data-calmes="-1" aria-label="Mês anterior">‹</button><button class="btn sm ghost" data-calhoje="1">Hoje</button><button class="btn sm ghost" data-calmes="1" aria-label="Próximo mês">›</button></div>
         <div class="cal"><div class="cal-w">${["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((w) => `<span>${w}</span>`).join("")}</div><div class="cal-g">${cel}</div></div>
         <div class="cal-leg">${Object.keys(TIPOS).filter((k) => ROLE === "i" || k !== "aprova").map((k) => `<span class="${k}">${tipoNome(k)}</span>`).join("")}</div>
       </div>`;
-  };
+  }
 
   // Modal do dia: reuniões com pauta e botões, tarefas com Enviar/Feito, entregas com a situação.
   function diaHTML(k) {
@@ -761,7 +775,14 @@
     setTimeout(() => { if (!CAL || !CAL.open) m.hidden = true; }, 200);
   }
 
-  VIEWS["i/agenda"] = () => VIEWS["c/agenda"]();
+  // Implantador: as reuniões (com pauta e acionáveis) e o calendário na mesma tela.
+  VIEWS["i/agenda"] = () => {
+    const ag = proxReunioes(), re = S.reunioes.filter((r) => r.status === "realizada").sort((a, b) => d(b.data) - d(a.data));
+    return hero("Agenda", "Agenda e reuniões.", "Menos reuniões, as que sobram rendem mais.", "O agente monta a pauta, confirma na véspera e transforma o que foi falado em acionáveis.") +
+      `<div class="block-sm first">${secTitle("Próximas reuniões", "", `<button class="btn sm" data-novareuniao="1">${I.plus}Nova reunião com pauta do agente</button>`)}<div class="reu-grid">${ag.map((r) => reuniaoHTML(r)).join("") || `<p class="empty">Nenhuma reunião marcada.</p>`}</div></div>
+       <div class="block-sm">${calHTML()}</div>
+       ${re.length ? `<div class="block-sm">${secTitle("Realizadas", "acionáveis já criados pelo agente")}<div class="reu-grid">${re.map((r) => reuniaoHTML(r)).join("")}</div></div>` : ""}`;
+  };
 
   VIEWS["c/equipe"] = () => hero("Minha equipe", "Quem usa o sistema.", "Convide pelo WhatsApp.", "Mande o link, a pessoa preenche os dados e a Aprova libera o acesso.") +
     `<div class="sec-title"><span></span><button class="btn sm" data-convidar="1">${I.whatsapp}Convidar alguém</button></div>` + usuariosHTML();
@@ -1272,7 +1293,7 @@
     step();
   }
   // Automode: o agente executa sozinho, em sequência, todas as tarefas dele na fase ativa.
-  let AUTO = false, SEL = null, CUR = null;
+  let AUTO = false, SEL = null, CUR = null, PROG = null;
   const pendAgente = () => allTasks().filter((t) => t.dono === "agente" && !t.feito).sort((a, b) => d(a.data) - d(b.data));
   function startAuto() {
     const marcadas = SEL ? pendAgente().filter((t) => SEL.has(t.id)) : minhas().filter((t) => t.dono === "agente");
@@ -1285,7 +1306,7 @@
     const next = () => {
       if (!AUTO) return;
       if (i >= fila.length) {
-        AUTO = false; CUR = null;
+        AUTO = false; CUR = null; PROG = null;
         log("manual", `Automode concluiu ${fila.length} tarefas`);
         save(); refresh();
         toast(`Automode: o agente concluiu ${fila.length} tarefas.`);
@@ -1293,18 +1314,23 @@
       }
       const id = fila[i++];
       CUR = id;
+      PROG = { i, n: fila.length };
       refresh();
-      runAgent(id, next, { i, n: fila.length });
+      runAgent(id, next, PROG);
     };
     next();
   }
   function stopAuto() {
-    AUTO = false; CUR = null;
+    AUTO = false; CUR = null; PROG = null;
     clearTimeout(runT);
     refresh();
     toast("Automode desligado. O agente parou.");
   }
-  const autoBtn = () => `<button class="auto ${AUTO ? "on" : ""}" data-auto="1" aria-pressed="${AUTO}"><span class="sw"></span><b>Automode</b><small>${AUTO ? "executando…" : "o agente faz sozinho"}</small></button>`;
+  // Liga/desliga no topo, ao lado de Editar painel. Executa as marcadas na tela do Agente.
+  const autoBtn = () => {
+    const n = SEL ? pendAgente().filter((t) => SEL.has(t.id)).length : doAgente().length;
+    return `<button class="auto top ${AUTO ? "on" : ""}" data-auto="1" aria-pressed="${AUTO}" title="${AUTO ? "Desligar: o agente para" : "Ligar: o agente executa sozinho as tarefas marcadas em Agente"}"><span class="sw"></span><b>Automode</b><small>${AUTO ? (PROG ? `${PROG.i} de ${PROG.n}` : "ligado") : `${n} tarefa${n === 1 ? "" : "s"}`}</small></button>`;
+  };
   // A lateral passa a mostrar outra coisa (execução do agente): deixa de ser um detalhe de indicador.
   function semInfo() {
     INFO = null;
@@ -1314,7 +1340,7 @@
   }
   function closeDrawer() {
     semInfo();
-    if (AUTO) { AUTO = false; refresh(); }
+    if (AUTO) { AUTO = false; CUR = null; PROG = null; refresh(); }
     const dr = $("#drawer");
     dr.classList.remove("on");
     clearTimeout(runT);
@@ -1403,8 +1429,8 @@
     // A aba Validações da prefeitura sempre abre no que está "Aguardando você".
     if (el('a[href="#/c/validacoes"]')) { filtro = "pendente"; if (location.hash === "#/c/validacoes") refresh(); }
     if ((x = el("[data-kpi]"))) {
-      // No implantador, "Com a prefeitura" leva à fila; o resto abre o detalhe na lateral.
-      if (x.dataset.kpi === "pend" && ROLE === "i") { go("i", "fila"); return; }
+      // No implantador, "Com a prefeitura" desce pro quadro da visão geral; o resto abre o detalhe na lateral.
+      if (x.dataset.kpi === "pend" && ROLE === "i") { const q = $("#quadro"); if (q) q.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
       openInfo(x.dataset.kpi);
       return;
     }
@@ -1433,6 +1459,8 @@
     }
     if ((x = el("[data-open]"))) { if (x.closest("#drawer")) closeDrawer(); openPlayer(x.dataset.open); return; }
     if ((x = el("[data-filtro]"))) { filtro = x.dataset.filtro; refresh(); return; }
+    if ((x = el("[data-cartf]"))) { CART_F = x.dataset.cartf; CART_MAIS.clear(); refresh(); return; }
+    if ((x = el("[data-cartmais]"))) { CART_MAIS.add(x.dataset.cartmais); refresh(); return; }
     if (el("[data-outra]")) { toast("Na demo, só Vale Verde tem dados."); return; }
     if ((x = el("[data-revisar]"))) {
       if (!$("#player").hidden) closePlayer();
