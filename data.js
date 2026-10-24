@@ -17,6 +17,15 @@ window.DATA = {
     saude: "risco"
   },
 
+  // De onde vêm as horasReuniaoEvitadas (a soma tem que bater).
+  evitadas: [
+    { t: "Validação por vídeo", d: "6 formulários validados sem call", h: 12 },
+    { t: "Regras pelo WhatsApp", d: "leis, fotos e planilhas lidas pelo agente", h: 8 },
+    { t: "Champions sem reunião", d: "12 secretarias apresentadas no WhatsApp", h: 6 },
+    { t: "Cadastro de usuários por link", d: "sem reunião de levantamento", h: 3 },
+    { t: "Pautas e confirmações automáticas", d: "as reuniões que sobraram ficaram mais curtas", h: 2 }
+  ],
+
   // Outras implantações da mesma implantadora (só o resumo, para a carteira).
   carteira: [
     { nome: "Serra Azul", uf: "SP", fase: "Fase 2 · Fazenda e Saúde", pct: 64, atrasadas: 0, videos: 2, ajustes: 0, proxima: "2026-10-27T14:00", saude: "ok" },

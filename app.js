@@ -198,7 +198,13 @@
     ? `<section class="phead"><h1>${h1}<span>${sub}</span></h1>${meta ? `<p>${meta}</p>` : ""}</section>`
     : `<section class="hero"><p class="eyebrow"><span class="dot-c"></span>${eyebrow}</p><h1>${h1}<span>${sub}</span></h1>${meta ? `<p class="hero-meta">${meta}</p>` : ""}</section>`;
   const secTitle = (t, hint = "", extra = "") => `<div class="sec-title"><h2>${t}</h2>${hint ? `<span class="hint">${hint}</span>` : ""}${extra}</div>`;
-  const kpi = (k, v, s, cls = "", bar) => `<div class="kpi ${cls}"><span class="k">${k}</span><span class="v">${v}</span>${bar !== undefined ? `<div class="bar"><i style="width:${bar}%"></i></div>` : `<span class="s">${s}</span>`}</div>`;
+  // Com `act`, o card vira botão e abre o detalhe do indicador (data-kpi).
+  const kpi = (k, v, s, cls = "", bar, act) => {
+    const body = `<span class="k">${k}</span><span class="v">${v}</span>${bar !== undefined ? `<div class="bar"><i style="width:${bar}%"></i></div>` : `<span class="s">${s}</span>`}`;
+    return act
+      ? `<button type="button" class="kpi click ${cls}" data-kpi="${act}" title="Ver detalhes"><span class="go">${I.right}</span>${body}</button>`
+      : `<div class="kpi ${cls}">${body}</div>`;
+  };
 
   function fasesHTML() {
     const ST = { ativa: "Em andamento", futura: "Próxima", concluida: "Concluída" };
@@ -332,7 +338,7 @@
   const VIEWS = {};
   VIEWS["i/carteira"] = () => {
     const c = S.cliente;
-    const vv = { nome: c.nome.replace("Prefeitura de ", ""), uf: c.uf, fase: `${ativa() ? ativa().nome : ""} · Obras`, pct: entrega(), atrasadas: semResposta().length, videos: vidsPend().length, ajustes: ajustes().length, proxima: proxReunioes()[0] && proxReunioes()[0].data, saude: window.DATA.cliente.saude || (semResposta().length ? "atencao" : "ok"), aberta: true };
+    const vv = { nome: c.nome.replace("Prefeitura de ", ""), uf: c.uf, fase: `${ativa() ? ativa().nome : ""} · Obras`, pct: entrega(), atrasadas: semResposta().length, videos: vidsPend().length, ajustes: ajustes().length, proxima: proxReunioes()[0] && proxReunioes()[0].data, saude: saudeVV(), aberta: true };
     const todas = [vv, ...S.carteira];
     const atencao = todas.filter((p) => p.saude !== "ok").length;
     const sum = (k) => todas.reduce((a, p) => a + p[k], 0);
@@ -363,11 +369,95 @@
     const pct = entrega();
     const pend = doCliente().length + vidsPend().length;
     return `<section class="kpis">
-        ${kpi("Entrega", pct + "%", "", "", pct)}
-        ${kpi(lado === "c" ? "Com você" : "Com a prefeitura", pend, "tarefas e vídeos", pend ? "alert" : "good")}
-        ${kpi("Reunião evitada", c.horasReuniaoEvitadas + "h", "validação por vídeo", "good")}
-        ${kpi("Go-live", daysUntil(c.meta + "T09:00") + " dias", "meta " + dia(c.meta + "T09:00"))}
+        ${kpi("Entrega", pct + "%", "", "", pct, "entrega")}
+        ${kpi(lado === "c" ? "Com você" : "Com a prefeitura", pend, "tarefas e vídeos", pend ? "alert" : "good", undefined, "pend")}
+        ${kpi("Reunião evitada", c.horasReuniaoEvitadas + "h", "validação por vídeo", "good", undefined, "reuniao")}
+        ${kpi("Go-live", daysUntil(c.meta + "T09:00") + " dias", "meta " + dia(c.meta + "T09:00"), "", undefined, "golive")}
       </section>`;
+  }
+
+  // ---------- detalhe dos indicadores (lateral direita) ----------
+  const saudeVV = () => window.DATA.cliente.saude || (semResposta().length ? "atencao" : "ok");
+  const fimFase = (f) => f.tasks.map((t) => t.data).sort().pop();
+  const tagDono = (t) => `<span class="tag ${ROLE === "c" && t.dono === "agente" ? "aprova" : t.dono}">${DONO[ROLE][t.dono]}</span>`;
+
+  // Os 2 meses da implantação: uma barra por fase com o "hoje" e, embaixo, cada entrega com o prazo.
+  function linhaTempoHTML() {
+    const c = S.cliente;
+    const ini = d(c.inicio + "T00:00"), fim = d(c.meta + "T23:59");
+    const pos = (x) => Math.min(100, Math.max(0, ((x - ini) / (fim - ini)) * 100));
+    const todas = allTasks(), feitas = todas.filter((t) => t.feito).length, late = todas.filter(isLate).length;
+    let de = ini;
+    const segs = S.fases.map((f) => {
+      const ate = d(fimFase(f));
+      const s = `<span class="gantt-seg ${f.status}" style="left:${pos(de)}%;width:${pos(ate) - pos(de)}%" title="${esc(f.nome)} · até ${dia(fimFase(f))}">${esc(f.nome)}</span>`;
+      de = ate;
+      return s;
+    }).join("");
+    let hoje = false;
+    const fases = S.fases.map((f) => {
+      const lis = [...f.tasks].sort((a, b) => d(a.data) - d(b.data)).map((t) => {
+        let pre = "";
+        if (!hoje && d(t.data) > now()) { hoje = true; pre = `<li class="today"><span>Hoje · ${dia(isoNow())}</span></li>`; }
+        const late = isLate(t);
+        return pre + `<li class="${t.feito ? "done" : late ? "late" : ""}"><span class="dt">${t.feito ? I.check : late ? I.clock : ""}</span><span class="tx"><b>${esc(t.titulo)}</b>${tagDono(t)}</span><span class="wd">${late ? "atrasada · " : ""}${dia(t.data)}</span></li>`;
+      }).join("");
+      return `<section class="tl-fase"><div class="tl-fh"><b>${esc(f.nome)}</b><span>${esc(f.descricao)}</span></div>
+        <div class="tl-fm">entrega até ${dia(fimFase(f))} · ${f.tasks.filter((t) => t.feito).length} de ${f.tasks.length} feitas</div><ol class="tl">${lis}</ol></section>`;
+    }).join("");
+    return `<h3>Linha do tempo</h3>
+      <p class="dr-instr">${dia(c.inicio + "T09:00")} a ${dia(c.meta + "T09:00")} · 2 meses de implantação</p>
+      <div class="tl-sum"><span class="ok">${feitas} feitas</span><span>${todas.length - feitas} a fazer</span>${late ? `<span class="late">${late} atrasada${late > 1 ? "s" : ""}</span>` : ""}</div>
+      <div class="gantt"><div class="gantt-track">${segs}<span class="gantt-now" style="left:${pos(now())}%"><span>Hoje</span></span></div>
+        <div class="gantt-axis"><span>${dia(c.inicio + "T09:00")} · início</span><span>${dia(c.meta + "T09:00")} · go-live</span></div></div>
+      ${fases}`;
+  }
+
+  function evitadaHTML() {
+    const h = S.cliente.horasReuniaoEvitadas;
+    return `<h3>De onde vêm as horas</h3>
+      <p class="dr-instr">Horas de reunião que viraram vídeo, WhatsApp ou link.</p>
+      <div class="dr-big">${h}h<small>≈ ${Math.round(h / 1.5)} reuniões de 1h30</small></div>
+      <ul class="dr-list">${(window.DATA.evitadas || []).map((x) => `<li><span>${esc(x.t)}<small>${esc(x.d)}</small></span><b>${x.h}h</b></li>`).join("")}</ul>
+      <div class="dr-out"><a class="btn sm ghost" href="#/${ROLE}/validacoes" data-drclose="1">${I.video}Ver os vídeos de validação</a></div>`;
+  }
+
+  function goliveHTML() {
+    const c = S.cliente, sd = saudeVV();
+    const falta = allTasks().filter((t) => !t.feito);
+    const daEquipe = falta.filter((t) => t.dono === "prefeitura").length + vidsPend().length;
+    const agora = doCliente().length + vidsPend().length;
+    const atras = falta.filter(isLate);
+    const motivo = sd === "ok"
+      ? "No ritmo atual, o go-live sai na data."
+      : `${atras.length ? `${atras.length} entrega${atras.length > 1 ? "s atrasadas seguram" : " atrasada segura"} o go-live.` : "O ritmo está abaixo do previsto."} Para manter ${dia(c.meta + "T09:00")}, ${ROLE === "c" ? "resolva o que está atrasado." : "cobre o que está atrasado."}`;
+    return `<h3>O caminho até o go-live</h3>
+      <p class="dr-instr">Meta: ${diaSem(c.meta + "T09:00")}</p>
+      <div class="dr-big">${daysUntil(c.meta + "T09:00")}<small>dias para o go-live</small></div>
+      <div class="dr-alert ${sd}"><span class="saude ${sd}">${SAUDE[sd]}</span><p>${motivo}</p></div>
+      <div class="dr-sec">Marcos até lá</div>
+      <ul class="dr-list">${S.fases.map((f) => `<li><span>${esc(f.nome)} · ${esc(f.descricao)}<small>${f.tasks.filter((t) => t.feito).length} de ${f.tasks.length} feitas</small></span><b>${dia(fimFase(f))}</b></li>`).join("")}</ul>
+      <div class="dr-sec">O que falta</div>
+      <ul class="dr-list">
+        <li><span>${DONO[ROLE].prefeitura}<small>${agora} agora${daEquipe > agora ? `, ${daEquipe - agora} nas próximas fases` : ""} · tarefas e vídeos</small></span><b>${daEquipe}</b></li>
+        <li><span>${ROLE === "c" ? "Aprova" : "Aprova e agente"}<small>configuração, ajustes e treinamento</small></span><b>${falta.length - falta.filter((t) => t.dono === "prefeitura").length}</b></li>
+      </ul>
+      ${atras.length ? `<div class="dr-sec">Atrasado</div><ul class="dr-list">${atras.map((t) => `<li class="late"><span>${esc(t.titulo)}<small>${DONO[ROLE][t.dono]}</small></span><b>${dia(t.data)}</b></li>`).join("")}</ul>` : ""}`;
+  }
+
+  function openInfo(kind) {
+    if (AUTO) { toast("Espere o Automode terminar."); return; }
+    const H = {
+      entrega: [`Entrega · ${entrega()}%`, linhaTempoHTML],
+      reuniao: ["Reunião evitada", evitadaHTML],
+      golive: ["Go-live", goliveHTML]
+    }[kind];
+    const dr = $("#drawer");
+    clearTimeout(runT);
+    dr.innerHTML = `<div class="dr-h"><span class="dr-k">${I.chart}${H[0]}</span><button class="dr-x" data-drclose="1" aria-label="Fechar">${I.x}</button></div>` + H[1]();
+    dr.hidden = false;
+    dr.scrollTop = 0;
+    requestAnimationFrame(() => dr.classList.add("on"));
   }
 
   VIEWS["i/visao"] = () => {
@@ -453,8 +543,8 @@
     return hero(c.nome, `Olá, ${esc(c.contato)}.`, n ? `${n} coisa${n > 1 ? "s" : ""} depende${n > 1 ? "m" : ""} de você.` : "Nada depende de você hoje.", "") +
       kpisHTML("c") +
       `<div class="grid"><div class="col-main">
-          ${secTitle("Para fazer", "o resto a Aprova resolve")}
-          <div class="queue">${todo.join("") || `<p class="empty">Tudo em dia 🎉</p>`}</div>
+          <div id="parafazer">${secTitle("Para fazer", "o resto a Aprova resolve")}
+          <div class="queue">${todo.join("") || `<p class="empty">Tudo em dia 🎉</p>`}</div></div>
           <section class="ask left"><h2 class="ask-h">Por onde começamos?</h2><div data-ai="c"></div></section>
         </div>
         <aside class="col-side">
@@ -951,6 +1041,15 @@
     if ((x = el(".role button"))) {
       try { localStorage.setItem("timao-role", x.dataset.role); } catch (er) {}
       go(x.dataset.role, ROUTES[x.dataset.role][x.dataset.role === "i" ? 1 : 0].id);
+      return;
+    }
+    if ((x = el("[data-kpi]"))) {
+      if (x.dataset.kpi !== "pend") { openInfo(x.dataset.kpi); return; }
+      // "Com você" leva ao que falta fazer: a fila no implantador, a lista "Para fazer" na prefeitura.
+      if (ROLE === "i") { go("i", "fila"); return; }
+      const q = $("#parafazer");
+      q.scrollIntoView({ behavior: "smooth", block: "start" });
+      q.classList.remove("flash"); void q.offsetWidth; q.classList.add("flash");
       return;
     }
     if ((x = el("[data-run]"))) { runAgent(x.dataset.run); return; }
