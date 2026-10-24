@@ -36,12 +36,12 @@ O seletor no topo troca entre **Implantador** e **Prefeitura**. Cada visão tem 
 
 | Implantador | Prefeitura |
 |---|---|
-| **Minha carteira:** as 4 implantações, ordenadas por quem precisa de atenção | **Início:** 4 cards que abrem o detalhe (Entrega com o escopo do contrato na linha do tempo, Com você, Go-live e Agenda de reunião) e atalhos do ai.aprova em botões |
-| **Visão geral:** indicadores, sua fila e o que o agente fez | **Validações:** vídeos em reel, com Aprovar e Ajustar junto do campo do ai.aprova |
-| **Minha fila:** ajustes pedidos pela prefeitura, cobranças e tarefas da Aprova | **Agenda:** calendário com as entregas do contrato, reuniões, prazos da equipe e o go-live |
-| **Fases e tarefas:** as tarefas do agente têm uma seta → que abre a execução na lateral | **Minha equipe:** convidar pelo WhatsApp |
-| **Reuniões, Validações, Usuários** | |
-| **Agente:** cada ação com o gatilho e a instrução seguida | |
+| **Minha carteira:** as 4 implantações com o progresso e, embaixo, um quadro só com o que está parado em todas: Comigo, Com os clientes e Com o agente (dá pra filtrar por prefeitura) | **Início:** 4 cards que abrem o detalhe (Entrega com o escopo do contrato na linha do tempo, Com você, Go-live e Agenda de reunião) e atalhos do ai.aprova em botões |
+| **Visão geral:** indicadores, próximas reuniões, o que o agente fez e o mesmo quadro (Comigo, Com a prefeitura, Com o agente) só deste cliente | **Validações:** vídeos em reel, com Aprovar e Ajustar junto do campo do ai.aprova |
+| **Fases e tarefas:** as tarefas do agente têm uma seta → que abre a execução na lateral | **Agenda:** calendário com as entregas do contrato, reuniões, prazos da equipe e o go-live |
+| **Agenda e reuniões:** próximas reuniões com pauta, o calendário e as realizadas com os acionáveis | **Minha equipe:** convidar pelo WhatsApp |
+| **Validações, Usuários** | |
+| **Agente:** marque o que o agente executa e ligue o **Automode** no topo da tela (ao lado de Editar painel do cliente, que só aparece dentro de um cliente) | |
 
 Na visão da prefeitura, o agente aparece como "Aprova" e os números de ticket ficam escondidos. Só a prefeitura aprova um vídeo: o implantador pode reenviar o link ou gerar um vídeo novo quando pedem ajuste.
 
