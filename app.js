@@ -320,7 +320,7 @@
           <button class="vthumb" data-open="${v.id}" aria-label="Assistir ${esc(v.processo)}">${vidHTML(v)}<span class="dur">0:${String(Math.round((steps(v) * STEP_MS) / 1000)).padStart(2, "0")}</span><span class="play"><span>${I.play}</span></span></button>
           <div class="vlabel"><span class="st-ic ${v.status}">${v.status === "aprovado" ? I.check : v.status === "reprovado" ? I.x : v.status === "ajuste" ? I.bolt : I.clock}</span>${esc(v.processo)}</div>
           <div class="vsub">${esc(VST[ROLE][v.status])} · ${esc(v.secretaria)}${ROLE === "i" ? ` · ${esc(v.ticket)}` : ""}</div>
-          ${ROLE === "i" && (v.status === "reprovado" || v.status === "ajuste") ? `<div class="vact"><span class="quote">“${esc(v.comentario || "")}”</span><button class="btn sm" data-regerar="${v.id}">Gerar vídeo novo</button></div>` : ""}
+          ${ROLE === "i" && (v.status === "reprovado" || v.status === "ajuste") ? `<div class="vact"><span class="quote">“${esc(v.comentario || "")}”</span><button class="btn sm" data-revisar="${v.id}">${I.bolt}Verificar alteração e criar vídeo</button></div>` : ""}
           ${ROLE === "c" && v.status === "pendente" ? `<div class="vact"><button class="btn sm" data-open="${v.id}">Assistir e validar</button></div>` : ""}
         </div>`).join("")}</div>`;
   }
@@ -394,7 +394,7 @@
   function filaItemHTML(it) {
     if (it.tipo === "ajuste") {
       const v = it.v;
-      return `<div class="qitem"><span class="qi red">${I.x}</span><div class="qt"><b>${esc(v.processo)}: ${v.status === "ajuste" ? "agente ajustando" : "ajuste pedido"}</b><span>“${esc(v.comentario || "")}” · ${esc(v.ticket)}</span></div><div class="qa"><button class="btn sm ghost" data-open="${v.id}">Ver vídeo</button><button class="btn sm" data-regerar="${v.id}">Gerar vídeo novo</button></div></div>`;
+      return `<div class="qitem"><span class="qi red">${I.x}</span><div class="qt"><b>${esc(v.processo)}: ${v.status === "ajuste" ? "agente ajustando" : "ajuste pedido"}</b><span>“${esc(v.comentario || "")}” · ${esc(v.ticket)}</span></div><div class="qa"><button class="btn sm ghost" data-open="${v.id}">Ver vídeo</button><button class="btn sm" data-revisar="${v.id}">${I.bolt}Verificar alteração e criar vídeo</button></div></div>`;
     }
     const t = it.t;
     if (it.tipo === "cobrar") {
@@ -634,7 +634,7 @@
          <button class="act no" data-act="no">${I.x}Ajustar</button>
          <button class="act cal" data-act="cal" title="Agendar conversa" aria-label="Agendar conversa">${I.cal}</button>`
       : `<button class="act cal wide" data-act="zap">${I.whatsapp}Reenviar no WhatsApp</button>
-         ${v.status === "reprovado" || v.status === "ajuste" ? `<button class="act ok" data-regerar="${v.id}">${I.bolt}Gerar vídeo novo</button>` : ""}`;
+         ${v.status === "reprovado" || v.status === "ajuste" ? `<button class="act ok" data-revisar="${v.id}">${I.bolt}Verificar alteração</button>` : ""}`;
   }
   function slideHTML(v) {
     const acts = slideActs(v);
@@ -810,6 +810,71 @@
     };
     step();
   }
+  // O agente propõe a alteração a partir do comentário da prefeitura; a implantadora confere antes do vídeo sair.
+  function proposta(v) {
+    const c = (v.comentario || "").trim();
+    const t = c.toLowerCase();
+    if (t.includes("vistoria")) return "Etapa nova: vistoria do fiscal antes da emissão";
+    if (t.includes("ouvidoria")) return "Assunto novo na lista: Ouvidoria";
+    if (t.includes("prazo") && /\d+/.test(t)) return `Prazo de resposta: ${t.match(/\d+/)[0]} dias`;
+    if (/^falta (o |a |um |uma )?/i.test(c)) return "Incluído: " + c.replace(/^falta (o |a |um |uma )?/i, "");
+    return c ? "Ajuste: " + c.charAt(0).toLowerCase() + c.slice(1) : "Ajuste pedido pela prefeitura";
+  }
+  function revisarAjuste(id) {
+    const v = S.validacoes.find((x) => x.id === id);
+    if (!v) return;
+    v.proposta = v.proposta || proposta(v);
+    const dr = $("#drawer");
+    clearTimeout(runT);
+    dr.innerHTML = `<div class="dr-h"><span class="dr-k">${I.spark}Alteração do agente</span><button class="dr-x" data-drclose="1" aria-label="Fechar">${I.x}</button></div>
+      <h3>${esc(v.processo)}</h3>
+      <p class="dr-instr">Seguindo <a href="${REPO}04-videos-validacao.md" target="_blank" rel="noopener">04-videos-validacao</a> · ${esc(v.ticket)}</p>
+      <div class="dr-ask"><span class="l">Pedido da prefeitura</span><p>“${esc(v.comentario || "sem comentário")}”</p></div>
+      <div class="diff">
+        <div class="col"><span class="l">Antes</span><ul>${v.alteracoes.map((a) => `<li>${esc(a)}</li>`).join("")}</ul></div>
+        <div class="col after"><span class="l">Depois</span><ul>${v.alteracoes.map((a) => `<li>${esc(a)}</li>`).join("")}<li class="new">${esc(v.proposta)}</li></ul></div>
+      </div>
+      <p class="hint">O agente já aplicou a alteração no formulário em homologação. Confira antes de o vídeo ir pra prefeitura.</p>
+      <div class="dr-btns"><button class="btn" data-criarvideo="${v.id}">${I.video}Criar vídeo novo</button><button class="btn ghost" data-outraalt="1">Pedir outra alteração</button></div>
+      <form class="dr-redo" hidden><textarea rows="3" placeholder="Explique pro agente o que mudar. Ex.: a vistoria é do engenheiro, não do fiscal"></textarea><button class="btn sm" type="submit">Refazer alteração</button></form>
+      <ol class="steps"></ol><div class="dr-out"></div>`;
+    $(".dr-redo", dr).addEventListener("submit", (e) => {
+      e.preventDefault();
+      const txt = $(".dr-redo textarea", dr).value.trim();
+      if (!txt) return;
+      v.proposta = txt.charAt(0).toUpperCase() + txt.slice(1);
+      log("manual", `Implantadora pediu outra alteração no ${v.processo}: "${txt}"`);
+      save();
+      revisarAjuste(v.id);
+      toast("O agente refez a alteração.");
+    });
+    dr.hidden = false;
+    requestAnimationFrame(() => dr.classList.add("on"));
+  }
+  function criarVideo(id) {
+    const v = S.validacoes.find((x) => x.id === id);
+    const dr = $("#drawer");
+    dr.querySelectorAll(".dr-btns, .dr-redo").forEach((el) => el.remove());
+    $(".dr-k", dr).innerHTML = `<span class="pulse"></span>Criando vídeo`;
+    const passos = ["Gravando o formulário em homologação", "Destacando só o que mudou", `Vinculando o vídeo ao ${v.ticket}`, "Enviando o link no WhatsApp da prefeitura"];
+    const ol = $(".steps", dr);
+    ol.innerHTML = passos.map((p) => `<li><span class="sp"></span><span>${esc(p)}</span></li>`).join("");
+    const lis = ol.querySelectorAll("li");
+    let i = 0;
+    const step = () => {
+      if (i > 0) { lis[i - 1].className = "done"; lis[i - 1].querySelector(".sp").innerHTML = I.check; }
+      if (i < lis.length) { lis[i].className = "doing"; i++; runT = setTimeout(step, 1000); return; }
+      v.alteracoes = [...v.alteracoes, v.proposta].slice(-4);
+      v.status = "pendente"; v.gerado = isoNow(); v.comentario = ""; delete v.proposta;
+      log("ticket", `Implantadora conferiu a alteração do agente no ${v.processo}. Vídeo novo criado e enviado no WhatsApp da prefeitura`);
+      save();
+      $(".dr-k", dr).innerHTML = `${I.check}Vídeo enviado`;
+      $(".dr-k", dr).classList.add("ok");
+      $(".dr-out", dr).innerHTML = `<p>Vídeo novo do ${esc(v.processo)} no Painel das Validações. A prefeitura foi avisada no WhatsApp.</p><button class="btn sm ghost" data-open="${v.id}">Ver o vídeo</button> <button class="btn sm ghost" data-drclose="1">Fechar</button>`;
+      refresh();
+    };
+    step();
+  }
   function closeDrawer() {
     const dr = $("#drawer");
     dr.classList.remove("on");
@@ -848,16 +913,19 @@
       save(); refresh();
       return;
     }
-    if ((x = el("[data-open]"))) { openPlayer(x.dataset.open); return; }
+    if ((x = el("[data-open]"))) { if (x.closest("#drawer")) closeDrawer(); openPlayer(x.dataset.open); return; }
     if ((x = el("[data-filtro]"))) { filtro = x.dataset.filtro; refresh(); return; }
     if (el("[data-outra]")) { toast("Na demo, só Vale Verde tem dados."); return; }
-    if ((x = el("[data-regerar]"))) {
-      const v = S.validacoes.find((y) => y.id === x.dataset.regerar);
-      if (v.comentario && !v.alteracoes.includes(v.comentario)) v.alteracoes = [...v.alteracoes, v.comentario].slice(-4);
-      v.status = "pendente"; v.gerado = isoNow(); v.comentario = "";
-      log("ticket", `Vídeo novo do ${v.processo} gerado com o ajuste pedido e enviado no WhatsApp da prefeitura`);
-      save(); toast(`Vídeo novo do ${v.processo} enviado pra prefeitura.`);
-      if (!$("#player").hidden) { closePlayer(); } else refresh();
+    if ((x = el("[data-revisar]"))) {
+      if (!$("#player").hidden) closePlayer();
+      revisarAjuste(x.dataset.revisar);
+      return;
+    }
+    if ((x = el("[data-criarvideo]"))) { criarVideo(x.dataset.criarvideo); return; }
+    if ((x = el("[data-outraalt]"))) {
+      const f = $(".dr-redo", $("#drawer"));
+      f.hidden = false;
+      $("textarea", f).focus();
       return;
     }
     if ((x = el("[data-cobrar]"))) {
