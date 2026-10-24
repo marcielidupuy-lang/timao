@@ -564,10 +564,12 @@
 
   // O que depende da prefeitura agora: vídeos para validar e tarefas da equipe.
   function todoItems() {
-    return [
-      ...vidsPend().map((v) => `<div class="todo"><span class="qi cyan">${I.video}</span><div class="qt"><b>Validar o vídeo do ${esc(v.processo)}</b><span>${v.alteracoes.length} mudanças · ${Math.round((steps(v) * STEP_MS) / 1000)} segundos</span></div><button class="btn sm" data-open="${v.id}">Assistir</button></div>`),
-      ...doCliente().map((t) => `<div class="todo ${isLate(t) ? "late" : ""}"><span class="qi ${isLate(t) ? "red" : "amber"}">${I.clipboard}</span><div class="qt"><b>${esc(t.titulo)}</b><span>${isLate(t) ? `Atrasada desde ${dia(t.data)}` : `Até ${dia(t.data)} às ${hora(t.data)}`}</span></div><div class="qa">${/enviar|devolver/i.test(t.titulo) ? `<label class="btn sm">${I.upload}Enviar<input type="file" hidden data-upload="${t.id}"></label>` : ""}<button class="btn sm ghost" data-task="${t.id}">Feito</button></div></div>`)
-    ];
+    const tarefa = (t) => `<div class="todo ${isLate(t) ? "late" : ""}"><span class="qi ${isLate(t) ? "red" : "amber"}">${I.clipboard}</span><div class="qt"><b>${esc(t.titulo)}</b><span>${isLate(t) ? `Atrasada desde ${dia(t.data)}` : `Até ${dia(t.data)} às ${hora(t.data)}`}</span></div><div class="qa">${/enviar|devolver/i.test(t.titulo) ? `<label class="btn sm">${I.upload}Enviar<input type="file" hidden data-upload="${t.id}"></label>` : ""}<button class="btn sm ghost" data-task="${t.id}">Feito</button></div></div>`;
+    const videos = vidsPend().map((v) => `<div class="todo"><span class="qi cyan">${I.video}</span><div class="qt"><b>Validar o vídeo do ${esc(v.processo)}</b><span>${v.alteracoes.length} mudanças · ${Math.round((steps(v) * STEP_MS) / 1000)} segundos</span></div><button class="btn sm" data-open="${v.id}">Assistir</button></div>`);
+    if (ROLE !== "c") return [...videos, ...doCliente().map(tarefa)];
+    // Prefeitura: o que está atrasado vem primeiro, depois os vídeos e o resto por prazo.
+    const minhas = doCliente().filter(visivel).sort((a, b) => d(a.data) - d(b.data));
+    return [...minhas.filter(isLate).map(tarefa), ...videos, ...minhas.filter((t) => !isLate(t)).map(tarefa)];
   }
   function paraFazerHTML() {
     return `<h3>Para fazer</h3>
@@ -599,14 +601,15 @@
     const falta = allTasks().filter((t) => !t.feito);
     const daEquipe = falta.filter((t) => t.dono === "prefeitura").length + vidsPend().length;
     const agora = doCliente().length + vidsPend().length;
-    const atras = falta.filter(isLate);
+    const atras = falta.filter((t) => isLate(t) && (ROLE !== "c" || visivel(t)));
+    const atrasHTML = atras.length ? `<div class="dr-sec">Atrasado</div><ul class="dr-list">${atras.map((t) => `<li class="late"><span>${esc(t.titulo)}<small>${DONO[ROLE][t.dono]}</small></span><b>${dia(t.data)}</b></li>`).join("")}</ul>` : "";
     const motivo = sd === "ok"
       ? "No ritmo atual, o go-live sai na data."
       : `${atras.length ? `${atras.length} entrega${atras.length > 1 ? "s atrasadas seguram" : " atrasada segura"} o go-live.` : "O ritmo está abaixo do previsto."} Para manter ${dia(c.meta + "T09:00")}, ${ROLE === "c" ? "resolva o que está atrasado." : "cobre o que está atrasado."}`;
     return `<h3>O caminho até o go-live</h3>
       <p class="dr-instr">Meta: ${diaSem(c.meta + "T09:00")}</p>
       <div class="dr-big">${daysUntil(c.meta + "T09:00")}<small>dias para o go-live</small></div>
-      ${ROLE === "i" ? `<div class="dr-alert ${sd}"><span class="saude ${sd}">${SAUDE[sd]}</span><p>${motivo}</p></div>` : ""}
+      ${ROLE === "i" ? `<div class="dr-alert ${sd}"><span class="saude ${sd}">${SAUDE[sd]}</span><p>${motivo}</p></div>` : atrasHTML}
       <div class="dr-sec">Marcos até lá</div>
       <ul class="dr-list">${S.fases.map((f) => `<li><span>${esc(f.nome)} · ${esc(f.descricao)}<small>${f.tasks.filter((t) => t.feito).length} de ${f.tasks.length} feitas</small></span><b>${dia(fimFase(f))}</b></li>`).join("")}</ul>
       <div class="dr-sec">O que falta</div>
@@ -614,7 +617,7 @@
         <li><span>${DONO[ROLE].prefeitura}<small>${agora} agora${daEquipe > agora ? `, ${daEquipe - agora} nas próximas fases` : ""} · tarefas e vídeos</small></span><b>${daEquipe}</b></li>
         <li><span>${ROLE === "c" ? "Aprova" : "Aprova e agente"}<small>configuração, ajustes e treinamento</small></span><b>${falta.length - falta.filter((t) => t.dono === "prefeitura").length}</b></li>
       </ul>
-      ${atras.length ? `<div class="dr-sec">Atrasado</div><ul class="dr-list">${atras.map((t) => `<li class="late"><span>${esc(t.titulo)}<small>${DONO[ROLE][t.dono]}</small></span><b>${dia(t.data)}</b></li>`).join("")}</ul>` : ""}`;
+      ${ROLE === "i" ? atrasHTML : ""}`;
   }
 
   // INFO guarda qual detalhe está aberto: ele fecha clicando fora e se atualiza quando algo muda.
