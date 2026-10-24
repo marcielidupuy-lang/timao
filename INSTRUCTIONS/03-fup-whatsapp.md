@@ -31,7 +31,7 @@
 
 ## Saída
 
-- Mensagem enviada.
+- Mensagem enviada por [07-envio-whatsapp](07-envio-whatsapp.md).
 - Campo `fup` atualizado.
 - Linha no feed: `prazo` · "FUP no WhatsApp para Ana Ribeiro: a lei do Alvará está 2 dias atrasada".
 

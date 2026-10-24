@@ -58,6 +58,7 @@ A pasta [INSTRUCTIONS](INSTRUCTIONS/) tem uma instrução por responsabilidade. 
 | 04-videos-validacao | Gera o vídeo de cada ajuste e trata ✓ ✗ 📅 |
 | 05-champions | Primeiro contato: quem é quem, agenda, pauta e confirmação |
 | 06-cadastro-usuarios | Link de cadastro, conferência e cadastro no prefeitura.aprova |
+| 07-envio-whatsapp | Entrega no WhatsApp as mensagens das outras instruções, pelo bot, com limites |
 
 ## Indicadores que mexem
 
@@ -80,3 +81,21 @@ npx serve .
 - `app.js` tem as telas e as duas visões. As respostas do ai.aprova e as execuções do agente são simuladas na demo.
 - Links diretos: `#/i/carteira` (implantador) e `#/c/inicio` (prefeitura).
 - Em "Reiniciar demo", no rodapé, o painel volta ao estado inicial.
+
+## WhatsApp de verdade (bot)
+
+Na demo publicada, os botões de WhatsApp **não enviam nada**: cada um mostra "Enviado no WhatsApp da prefeitura: …" com o que seria enviado. O envio de verdade está pronto na pasta [bot/](bot/), mas **ainda não foi conectado** a um número. A regra de envio está em [INSTRUCTIONS/07-envio-whatsapp](INSTRUCTIONS/07-envio-whatsapp.md).
+
+Como ligar:
+
+```bash
+cd bot
+npm install
+npm start
+```
+
+1. Abra `http://localhost:3333/qr` e escaneie com o WhatsApp de um **número de teste** (Aparelhos conectados › Conectar um aparelho).
+2. O terminal mostra um link de configuração. Abra esse link **uma vez** no navegador da demo: ele guarda o endereço e a senha do bot só naquele navegador.
+3. A partir daí, os botões de WhatsApp mandam a mensagem pronta para o número da demo. Para desligar, abra o painel com `?bot=off`.
+
+Proteções: o bot só envia para o número da demo (variável `DESTINO`), pede senha (gerada em `bot/auth/token.txt`, fora do git) e aceita no máximo 1 mensagem a cada 3 segundos e 40 por hora. O bot roda no computador da demo, então o envio só funciona nesse computador, com o bot ligado. Em produção, a ideia é trocar pela API oficial do WhatsApp.

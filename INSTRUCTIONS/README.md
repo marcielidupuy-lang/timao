@@ -14,6 +14,7 @@ O agente trabalha nos bastidores da implantação. Cada arquivo desta pasta é *
  Ação no painel (✓ ✗ 📅, ai.aprova) ┘                      └──▶ 06-cadastro-usuarios
 
  Todas seguem 00-regras-gerais (tom, canais, limites e quando chamar um humano).
+ Toda mensagem de WhatsApp sai por 07-envio-whatsapp (o bot da pasta bot/).
 ```
 
 ## Mapa de responsabilidades
@@ -27,6 +28,7 @@ O agente trabalha nos bastidores da implantação. Cada arquivo desta pasta é *
 | [04-videos-validacao](04-videos-validacao.md) | Gerar o vídeo de cada ajuste e tratar ✓ ✗ 📅 | Ajuste concluído em chamado e ação no painel | Vídeo no painel, link no WhatsApp, ticket atualizado |
 | [05-champions](05-champions.md) | Primeiro contato com a secretaria: quem é quem, agenda, pauta e confirmação | Nova secretaria na fase | Champion identificado e reunião agendada com pauta |
 | [06-cadastro-usuarios](06-cadastro-usuarios.md) | Enviar o link de cadastro e cadastrar no prefeitura.aprova | Lista de usuários e formulário preenchido | Usuários cadastrados e status no painel |
+| [07-envio-whatsapp](07-envio-whatsapp.md) | Entregar no WhatsApp a mensagem que as outras escreveram, com limites | 03, 04, 06 e botões de WhatsApp do painel | Mensagem enviada pelo bot (ou aviso na demo) e linha no feed |
 
 ## Onde cada instrução escreve
 

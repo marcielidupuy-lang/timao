@@ -20,10 +20,31 @@
   ];
   let S = load();
   const PAINEL_URL = "https://marcielidupuy-lang.github.io/timao/";
-  // Na demo nada sai de verdade: em vez de abrir o wa.me, avisa o que foi enviado no WhatsApp da
-  // prefeitura. A mensagem pronta (msg) continua montada pra quando o envio for real (window.WHATSAPP).
-  function enviarWhats(msg, oque) {
-    toast(`Enviado no WhatsApp da prefeitura: ${oque.charAt(0).toLowerCase() + oque.slice(1)}.`);
+  // Bot do WhatsApp (pasta bot/). O link de configuração que o bot imprime (?bot=...&token=...) guarda o
+  // endereço e a senha só neste navegador; ?bot=off desliga. Sem bot, a demo só avisa o que seria enviado.
+  const BOT = (() => {
+    try {
+      const q = new URLSearchParams(location.search);
+      if (q.has("bot")) {
+        if (q.get("bot") === "off") localStorage.removeItem("timao-bot");
+        else localStorage.setItem("timao-bot", JSON.stringify({ url: q.get("bot").replace(/\/$/, ""), token: q.get("token") || "" }));
+        history.replaceState(null, "", location.pathname + location.hash);
+      }
+      return JSON.parse(localStorage.getItem("timao-bot") || "null");
+    } catch (e) { return null; }
+  })();
+  async function enviarWhats(msg, oque) {
+    const feito = `Enviado no WhatsApp da prefeitura: ${oque.charAt(0).toLowerCase() + oque.slice(1)}.`;
+    if (!BOT) { toast(feito); return; }
+    toast("Enviando pelo WhatsApp…");
+    try {
+      const r = await fetch(`${BOT.url}/enviar`, { method: "POST", headers: { "content-type": "application/json", "x-token": BOT.token }, body: JSON.stringify({ texto: msg }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.erro || `erro ${r.status}`);
+      toast(feito);
+    } catch (e) {
+      toast(`Não consegui enviar pelo bot: ${e.message === "Failed to fetch" ? "ele está desligado" : e.message}.`);
+    }
   }
   // Botão que manda um texto pronto: o texto e o que ele é vão nos próprios atributos.
   const botaoWhats = (msg, oque, rotulo = "Mandar no WhatsApp") => `<button type="button" class="btn sm wa" data-wa="${esc(msg)}" data-wao="${esc(oque)}">${I.whatsapp}${rotulo}</button>`;
@@ -104,7 +125,8 @@
     ["03-fup-whatsapp", "Cobra o que está 2 dias atrasado e responde sobre prazo"],
     ["04-videos-validacao", "Gera o vídeo de cada ajuste e trata ✓ ✗ 📅"],
     ["05-champions", "Primeiro contato, agenda, pauta e confirmação"],
-    ["06-cadastro-usuarios", "Link de cadastro e cadastro no prefeitura.aprova"]
+    ["06-cadastro-usuarios", "Link de cadastro e cadastro no prefeitura.aprova"],
+    ["07-envio-whatsapp", "Entrega no WhatsApp o que as outras escreveram"]
   ];
   const REPO = "https://github.com/marcielidupuy-lang/timao/blob/main/INSTRUCTIONS/";
   // Na visão da prefeitura o agente é "Aprova": o cliente não precisa saber quem executa.
