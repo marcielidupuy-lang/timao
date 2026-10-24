@@ -81,6 +81,7 @@
     trash: sv('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'),
     megaphone: sv('<path d="M4 10v4h3l7 4V6L7 10z"/><path d="M18 9a4 4 0 010 6"/>'),
     link: sv('<path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/>'),
+    clip: sv('<path d="M20.5 11.5l-8.2 8.2a5 5 0 01-7-7l8.6-8.6a3.4 3.4 0 014.8 4.8l-8.4 8.4a1.8 1.8 0 01-2.6-2.6l7.8-7.8"/>'),
     upload: sv('<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/>'),
     sparkle: sv('<path d="M12 4v4M12 16v4M4 12h4M16 12h4M7 7l2 2M15 15l2 2M7 17l2-2M15 9l2-2"/>'),
     logo: '<svg viewBox="0 0 40 40" class="sc-logo"><path d="M10 33L20 8l10 25" stroke="#111" stroke-width="3.4" fill="none"/><path d="M2 22h36" stroke="#14c3d6" stroke-width="3.2"/></svg>',
@@ -843,7 +844,7 @@
       <form class="box">
         <textarea rows="2" placeholder="${esc(placeholder)}" aria-label="Mensagem para o ai.aprova"></textarea>
         <div class="box-row">
-          <label class="ib" title="Anexar PDF, foto ou planilha">${I.plus}<input type="file" hidden></label>
+          <label class="ib" title="Anexar PDF, foto ou planilha">${ctx ? I.clip : I.plus}<input type="file" hidden></label>
           <button type="button" class="ib mic" title="Gravar áudio">${I.mic}</button>
           <span class="model">${I.sparkle}ai.aprova · implantação ${I.chev}</span>
           <span class="grow"></span>
@@ -994,14 +995,14 @@
 
   // ---------- player / reel ----------
   let playT = null, playId = null, playStep = 0;
-  // Botões compactos, na parte de baixo, junto do campo do ai.aprova.
+  // Botões do vídeo. No computador ficam numa linha acima do chat; no celular viram círculos na lateral
+  // direita, com o nome embaixo (o .ac é o círculo, o span é o nome). As cores são as mesmas nos dois.
   function slideActs(v) {
+    const b = (cls, attr, ic, nome, curto = nome) => `<button class="act ${cls}" ${attr} aria-label="${nome}"><i class="ac">${I[ic]}</i><span class="lbl" data-m="${curto}">${nome}</span></button>`;
     return ROLE === "c"
-      ? `<button class="act ok" data-act="ok">${I.check}Aprovar</button>
-         <button class="act no" data-act="no">${I.x}Ajustar</button>
-         <button class="act cal" data-act="cal" title="Agendar conversa" aria-label="Agendar conversa">${I.cal}</button>`
-      : `<button class="act cal wide" data-act="zap">${I.whatsapp}Reenviar no WhatsApp</button>
-         ${v.status === "reprovado" || v.status === "ajuste" ? `<button class="act ok" data-revisar="${v.id}">${I.bolt}Verificar alteração</button>` : ""}`;
+      ? b("ok", 'data-act="ok"', "check", "Aprovar") + b("no", 'data-act="no"', "x", "Ajustar") + b("cal", 'data-act="cal" title="Agendar conversa"', "cal", "Agendar conversa", "Agendar")
+      : b("cal wide", 'data-act="zap"', "whatsapp", "Reenviar no WhatsApp", "Reenviar") +
+        (v.status === "reprovado" || v.status === "ajuste" ? b("ok", `data-revisar="${v.id}"`, "bolt", "Verificar alteração", "Verificar") : "");
   }
   function slideHTML(v) {
     const acts = slideActs(v);
@@ -1028,7 +1029,7 @@
       const sl = slot.closest(".slide");
       const v = S.validacoes.find((x) => x.id === sl.dataset.id);
       const box = aiBox({
-        placeholder: "O que precisa mudar? Ex.: o prazo é 30 dias",
+        placeholder: "O que precisa mudar?",
         ctx: sl.dataset.id,
         sugs: [
           { ic: "form", t: "Falta um campo", d: "diga qual" },

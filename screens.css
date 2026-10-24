@@ -167,24 +167,62 @@
 .act { width: auto; height: 38px; border-radius: 10px; padding: 0 14px; gap: 7px; display: inline-flex; align-items: center; justify-content: center; font-size: 13.5px; font-weight: 600; box-shadow: none; flex: 1; }
 .act:hover { transform: none; filter: brightness(.95); }
 .act svg { width: 16px; height: 16px; stroke-width: 2.6; }
-.act.ok { background: var(--green); color: #fff; }
-.act.no { background: #fff; color: var(--red); border: 1px solid #fecaca; }
-.act.cal { background: #fff; color: var(--ink); border: 1px solid var(--line); flex: none; width: 38px; padding: 0; }
+/* Mesmas cores do celular: aprovar em ciano, ajustar em cinza, agendar com o ícone em ciano */
+.act .ac { display: contents; }
+.act.ok { background: var(--cyan); color: #fff; }
+.act.ok:hover { filter: none; background: var(--cyan-d); }
+.act.no { background: #e4e4e7; color: #3f3f46; border: 0; }
+.act.no:hover { filter: none; background: #d4d4d8; }
+.act.cal { background: #fff; color: var(--cyan-d); border: 1.5px solid #bdeef4; flex: none; width: 38px; padding: 0; }
+.act.cal:hover { filter: none; background: var(--cyan-soft); }
 .act.cal svg { width: 17px; height: 17px; stroke-width: 2; }
+.act.cal:not(.wide) .lbl { display: none; }
 .act.cal.wide { width: auto; padding: 0 14px; flex: 1; }
 .side .alt-list + .act-row { margin-top: auto; }
 .slots { right: 24px; top: auto; bottom: 150px; transform: none; }
 @media (max-width: 1100px) {
   .slide { grid-template-columns: minmax(0, 1fr) 300px; }
 }
+/* Celular, estilo stories: o vídeo encolhe pra caber na tela, os botões são círculos na lateral
+   direita e o chat vira uma barra ciano embaixo (clipe, texto, microfone). */
 @media (max-width: 860px) {
-  .slide { grid-template-columns: minmax(0, 1fr); }
-  .stage { padding-right: 0; }
-  .side .act-row { margin: 0 0 8px; }
+  .slide { display: flex; flex-direction: column; gap: 10px; padding: 14px 14px calc(12px + env(safe-area-inset-bottom)); }
+  .stage { flex: 1; min-height: 0; padding-right: 0; }
   .stage-h { padding-right: 44px; }
-  .stage .vid { aspect-ratio: 4 / 5; }
-  .act { height: 40px; }
-  .slots { right: 14px; bottom: 120px; top: auto; }
+  .stage .who { margin: 6px 0 8px 2px; }
+  /* O vídeo cabe no espaço que sobra sem distorcer: a menor entre a largura e 4/5 da altura. */
+  .stage .vidwrap { flex: 1; min-height: 0; margin-top: 0; justify-content: flex-start; align-items: center; container-type: size; }
+  .stage .vid { width: min(100cqw, 80cqh); height: auto; max-width: none; max-height: none; aspect-ratio: 4 / 5; }
+  .slide .side, .slide .side .ai { position: static; flex: none; }
+  .side .comment, .side .ai-log, .side .alt-list { margin-right: 74px; }
+  .side .ai-log { max-height: 18vh; }
+  .side .alt-list { max-height: 22vh; overflow-y: auto; }
+
+  .side .act-row { position: absolute; z-index: 2; right: 10px; bottom: calc(84px + env(safe-area-inset-bottom)); flex-direction: column; align-items: center; gap: 12px; margin: 0; }
+  .act, .act.ok, .act.no, .act.cal, .act.cal.wide { flex: none; flex-direction: column; gap: 4px; width: 62px; height: auto; padding: 0; border: 0; border-radius: 0; background: transparent; color: var(--ink-2); }
+  .act:hover, .act.ok:hover, .act.no:hover, .act.cal:hover { background: transparent; }
+  .act .ac { display: grid; place-items: center; width: 54px; height: 54px; border-radius: 50%; box-shadow: 0 6px 16px rgba(24,24,27,.16); transition: transform .12s; }
+  .act:active .ac { transform: scale(.92); }
+  .act .ac svg { width: 26px; height: 26px; stroke-width: 3; }
+  .act.ok .ac { background: var(--cyan); color: #fff; }
+  .act.no .ac { background: #d4d4d8; color: #52525b; }
+  .act.cal .ac { background: #fff; color: var(--cyan); }
+  .act.cal .ac svg { width: 28px; height: 28px; stroke-width: 2; }
+  .act .lbl, .act.cal:not(.wide) .lbl { display: block; font-size: 0; }
+  .act .lbl::after { content: attr(data-m); font-size: 11px; font-weight: 600; color: var(--ink-2); }
+
+  .side .box { display: flex; align-items: center; gap: 2px; padding: 5px 6px; border: 0; border-radius: 99px; background: var(--cyan); box-shadow: 0 6px 18px rgba(20,195,214,.3); }
+  .side .box:focus-within { border-color: transparent; box-shadow: 0 0 0 4px rgba(20,195,214,.22); }
+  .side .box-row { display: contents; }
+  .side .box textarea { order: 1; flex: 1; min-width: 0; min-height: 0; height: 38px; padding: 9px 6px; overflow: hidden; color: #fff; font-size: 14px; }
+  .side .box textarea::placeholder { color: rgba(255,255,255,.85); }
+  .side .box .ib { order: 0; width: 38px; height: 38px; color: #fff; }
+  .side .box .ib.mic { order: 2; }
+  .side .box .ib svg { width: 21px; height: 21px; stroke-width: 2; }
+  .side .box .send { order: 3; width: 36px; height: 36px; background: rgba(255,255,255,.25); }
+  .side .box:focus-within .send { background: #fff; color: var(--cyan-d); }
+  .side .box .pill-ok, .side .box .grow, .side .box .model { display: none; }
+  .slots { right: 80px; bottom: 96px; top: auto; }
 }
 
 /* revisão da alteração do agente antes do vídeo novo */
