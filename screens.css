@@ -198,7 +198,11 @@
 @media (max-width: 860px) {
   .slide { display: flex; flex-direction: column; gap: 10px; padding: 14px 14px calc(12px + env(safe-area-inset-bottom)); }
   .stage { flex: 1; min-height: 0; padding-right: 0; }
-  .stage-h { padding-right: 44px; }
+  .stage-h { padding-right: 44px; gap: 8px; }
+  /* Títulos menores só no celular: o nome do processo no topo e o título dentro do vídeo */
+  .stage-h .pill { font-size: 15px; padding: 3px 12px; letter-spacing: -.2px; border-width: 1.2px; }
+  .stage-h .vstatus { font-size: 11px; padding: 3px 9px; }
+  .stage .vid .sc-title { font-size: 2.2em; }
   .stage .who { margin: 6px 0 8px 2px; }
   /* O vídeo cabe no espaço que sobra sem distorcer: a menor entre a largura e 4/5 da altura. */
   .stage .vidwrap { flex: 1; min-height: 0; margin-top: 0; justify-content: flex-start; align-items: center; container-type: size; }

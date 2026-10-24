@@ -1397,12 +1397,14 @@
       editou(`Link "${l.titulo}" removido do painel da prefeitura`);
       return;
     }
-    // Player: clicar fora do vídeo (no fundo, fora dos botões e do chat) fecha. Se a caixa de
-    // agendar estiver aberta, o primeiro clique fora fecha só ela.
-    if (!$("#player").hidden && (e.target.id === "player" || e.target.matches("#reel, .slide, .stage, .vidwrap, .stage .who"))) {
-      const sl = $("#player .slots");
-      if (sl) sl.remove(); else closePlayer();
-      return;
+    // Player: a caixa de agendar fecha com qualquer clique fora dela (o botão do calendário já
+    // abre e fecha sozinho). Clicar fora do vídeo (no fundo, fora dos botões e do chat) fecha o
+    // player; com a caixa aberta, esse primeiro clique fecha só a caixa.
+    if (!$("#player").hidden) {
+      const caixa = $("#player .slots");
+      const fundo = e.target.id === "player" || e.target.matches("#reel, .slide, .stage, .vidwrap, .stage .who");
+      if (caixa && !e.target.closest('[data-act="cal"]')) { caixa.remove(); if (fundo) return; }
+      else if (fundo) { closePlayer(); return; }
     }
     if (e.target.id === "scrim") { closeDrawer(); return; }
     if (el("[data-ajuda]")) {
