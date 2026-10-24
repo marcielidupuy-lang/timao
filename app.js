@@ -20,12 +20,13 @@
   ];
   let S = load();
   const PAINEL_URL = "https://marcielidupuy-lang.github.io/timao/";
-  function abrirWhats(msg) {
-    const n = String(window.WHATSAPP || "").replace(/\D/g, "");
-    window.open(`https://wa.me/${n}?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
+  // Na demo nada sai de verdade: em vez de abrir o wa.me, avisa o que foi enviado no WhatsApp da
+  // prefeitura. A mensagem pronta (msg) continua montada pra quando o envio for real (window.WHATSAPP).
+  function enviarWhats(msg, oque) {
+    toast(`Enviado no WhatsApp da prefeitura: ${oque.charAt(0).toLowerCase() + oque.slice(1)}.`);
   }
-  // Botão que manda um texto pronto: o texto vai no próprio atributo.
-  const botaoWhats = (msg, rotulo = "Mandar no WhatsApp") => `<button type="button" class="btn sm wa" data-wa="${esc(msg)}">${I.whatsapp}${rotulo}</button>`;
+  // Botão que manda um texto pronto: o texto e o que ele é vão nos próprios atributos.
+  const botaoWhats = (msg, oque, rotulo = "Mandar no WhatsApp") => `<button type="button" class="btn sm wa" data-wa="${esc(msg)}" data-wao="${esc(oque)}">${I.whatsapp}${rotulo}</button>`;
   const PN = () => S.painel || (S.painel = JSON.parse(JSON.stringify(PAINEL_PADRAO)));
   const visivel = (t) => !PN().ocultas.includes(t.id);
   let EDIT = false;
@@ -1002,14 +1003,14 @@
       if (t.includes("resumo")) {
         const c = S.cliente;
         const txt = `${c.contato}, a implantação está ${entrega()}% entregue. ${(() => { const n = S.validacoes.filter((v) => v.status === "aprovado").length; return n === 1 ? "1 formulário já aprovado" : `${n} formulários já aprovados`; })()}, ${vidsPend().length === 1 ? "1 vídeo esperando vocês" : `${vidsPend().length} vídeos esperando vocês`} e ${semResposta().length === 1 ? "1 pendência atrasada" : `${semResposta().length} pendências atrasadas`} (${semResposta()[0] ? semResposta()[0].titulo.toLowerCase() : "nenhuma"}). Go-live em ${dia(c.meta + "T09:00")}. Painel: ${PAINEL_URL}#/c/inicio`;
-        return `Pronto pra mandar no WhatsApp:\n\n“${esc(txt)}”\n\n${botaoWhats(txt)}`;
+        return `Pronto pra mandar no WhatsApp:\n\n“${esc(txt)}”\n\n${botaoWhats(txt, "Resumo da implantação")}`;
       }
       if (t.includes("cobr") || t.includes("penden")) {
         const s = semResposta();
         s.forEach((x) => { findTask(x.id).fupEm = isoNow(); log("prazo", `FUP no WhatsApp: "${x.titulo}" está atrasada desde ${dia(x.data)}`); });
         save();
         const fup = `Oi, ${S.cliente.contato}! Aqui é o assistente da Aprova. Estão em aberto: ${s.map((x) => `${x.titulo} (desde ${dia(x.data)})`).join("; ")}. Pode mandar aqui mesmo, foto ou áudio servem 🙂`;
-        return s.length ? `Preparei o FUP de <b>${s.length}</b> pendência${s.length > 1 ? "s" : ""}. Se não responderem em 48h, te aviso.\n\n${botaoWhats(fup)}` : "Nada atrasado na prefeitura agora.";
+        return s.length ? `Preparei o FUP de <b>${s.length}</b> pendência${s.length > 1 ? "s" : ""}. Se não responderem em 48h, te aviso.\n\n${botaoWhats(fup, `Cobrança de ${s.length} pendência${s.length > 1 ? "s" : ""} atrasada${s.length > 1 ? "s" : ""}`)}` : "Nada atrasado na prefeitura agora.";
       }
       if (t.includes("pauta")) {
         const r = proxReunioes()[0];
@@ -1312,7 +1313,7 @@
       save();
       $(".dr-k", dr).innerHTML = `${I.check}Vídeo enviado`;
       $(".dr-k", dr).classList.add("ok");
-      $(".dr-out", dr).innerHTML = `<p>Vídeo novo do ${esc(v.processo)} no Painel das Validações. Avise a prefeitura no WhatsApp com a mensagem pronta.</p>${botaoWhats(`Oi, ${S.cliente.contato}! Ajustei o ${v.processo} do jeito que vocês pediram. O vídeo novo está aqui pra você conferir e aprovar 👉 ${PAINEL_URL}#/c/validacoes`, "Avisar no WhatsApp")} <button class="btn sm ghost" data-open="${v.id}">Ver o vídeo</button> <button class="btn sm ghost" data-drclose="1">Fechar</button>`;
+      $(".dr-out", dr).innerHTML = `<p>Vídeo novo do ${esc(v.processo)} no Painel das Validações. Avise a prefeitura no WhatsApp com a mensagem pronta.</p>${botaoWhats(`Oi, ${S.cliente.contato}! Ajustei o ${v.processo} do jeito que vocês pediram. O vídeo novo está aqui pra você conferir e aprovar 👉 ${PAINEL_URL}#/c/validacoes`, `Aviso do vídeo novo do ${v.processo}`, "Avisar no WhatsApp")} <button class="btn sm ghost" data-open="${v.id}">Ver o vídeo</button> <button class="btn sm ghost" data-drclose="1">Fechar</button>`;
       refresh();
     };
     step();
@@ -1386,7 +1387,12 @@
   document.addEventListener("click", (e) => {
     const el = (s) => e.target.closest(s);
     const wa = el("[data-wa]");
-    if (wa) { abrirWhats(wa.dataset.wa); return; }
+    if (wa) {
+      log("whatsapp", `Enviado no WhatsApp da prefeitura: ${wa.dataset.wao.charAt(0).toLowerCase() + wa.dataset.wao.slice(1)}`);
+      save();
+      enviarWhats(wa.dataset.wa, wa.dataset.wao);
+      return;
+    }
     let x;
     if ((x = el("[data-preview]"))) {
       try { sessionStorage.setItem("timao-prev", "1"); } catch (er) {}
@@ -1509,8 +1515,8 @@
       const t = findTask(x.dataset.cobrar);
       t.fupEm = isoNow();
       log("prazo", `FUP no WhatsApp: "${t.titulo}" está atrasada desde ${dia(t.data)}`);
-      abrirWhats(`Oi, ${S.cliente.contato}! Aqui é o assistente da Aprova. Ainda falta "${t.titulo}" (o prazo era ${dia(t.data)}). Sem isso a implantação trava nesse ponto. Pode mandar aqui mesmo, foto ou áudio servem 🙂`);
-      save(); toast("FUP aberto no seu WhatsApp."); refresh();
+      enviarWhats(`Oi, ${S.cliente.contato}! Aqui é o assistente da Aprova. Ainda falta "${t.titulo}" (o prazo era ${dia(t.data)}). Sem isso a implantação trava nesse ponto. Pode mandar aqui mesmo, foto ou áudio servem 🙂`, `Cobrança de "${t.titulo}"`);
+      save(); refresh();
       return;
     }
     if ((x = el("[data-delreuask]"))) { EXCLUIR = x.dataset.delreuask; refresh(); return; }
@@ -1556,8 +1562,8 @@
     if (el("[data-convidar]")) {
       const pend = S.usuarios.filter((u) => u.status === "link-enviado").map((u) => u.nome.split(" ")[0]);
       log("whatsapp", `Link de cadastro enviado no WhatsApp${pend.length ? ` (lembrete para ${pend.join(", ")})` : ""}`);
-      abrirWhats(`Oi! Aqui é o assistente da Aprova. Pra você ter acesso ao sistema novo de processos de ${S.cliente.nome.replace("Prefeitura de ", "")}, preenche esse cadastro rapidinho (1 min): ${PAINEL_URL}#/c/equipe`);
-      save(); toast("Convite aberto no seu WhatsApp.");
+      enviarWhats(`Oi! Aqui é o assistente da Aprova. Pra você ter acesso ao sistema novo de processos de ${S.cliente.nome.replace("Prefeitura de ", "")}, preenche esse cadastro rapidinho (1 min): ${PAINEL_URL}#/c/equipe`, "Link de cadastro");
+      save();
       return;
     }
     if ((x = el("[data-act]"))) {
@@ -1572,8 +1578,8 @@
       }
       if (x.dataset.act === "zap") {
         log("whatsapp", `Link do vídeo do ${v.processo} reenviado no WhatsApp da prefeitura`);
-        abrirWhats(`Oi, ${S.cliente.contato}! O formulário de ${v.processo} está pronto pra você conferir: ${v.alteracoes.length} mudanças, menos de 20 segundos. Se estiver ok, é só tocar em Aprovar 👉 ${PAINEL_URL}#/c/validacoes`);
-        save(); toast("Mensagem aberta no seu WhatsApp.");
+        enviarWhats(`Oi, ${S.cliente.contato}! O formulário de ${v.processo} está pronto pra você conferir: ${v.alteracoes.length} mudanças, menos de 20 segundos. Se estiver ok, é só tocar em Aprovar 👉 ${PAINEL_URL}#/c/validacoes`, `Link do vídeo do ${v.processo}`);
+        save();
       }
       if (x.dataset.act === "cal") showSlots(sl, (iso) => {
         S.reunioes.push({ id: "r" + Date.now(), origem: "video", titulo: `Conversa rápida · ${v.processo}`, data: iso, secretaria: v.secretaria, status: "agendada", confirmacao: "Agente confirma no WhatsApp um dia antes", pauta: [`Dúvidas sobre o vídeo do ${v.processo}`, ...v.alteracoes] });
