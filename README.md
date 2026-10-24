@@ -38,7 +38,7 @@ O seletor no topo troca entre **Implantador** e **Prefeitura**. Cada visão tem 
 |---|---|
 | **Minha carteira:** as 4 implantações, ordenadas por quem precisa de atenção | **Início:** 4 cards que abrem o detalhe (Entrega com o escopo do contrato na linha do tempo, Com você, Go-live e Agenda de reunião) e atalhos do ai.aprova em botões |
 | **Visão geral:** indicadores, sua fila e o que o agente fez | **Validações:** vídeos em reel, com Aprovar e Ajustar junto do campo do ai.aprova |
-| **Minha fila:** ajustes pedidos pela prefeitura, cobranças e tarefas da Aprova | **Reuniões:** pauta, confirmar presença e remarcar |
+| **Minha fila:** ajustes pedidos pela prefeitura, cobranças e tarefas da Aprova | **Agenda:** calendário com as entregas do contrato, reuniões, prazos da equipe e o go-live |
 | **Fases e tarefas:** as tarefas do agente têm uma seta → que abre a execução na lateral | **Minha equipe:** convidar pelo WhatsApp |
 | **Reuniões, Validações, Usuários** | |
 | **Agente:** cada ação com o gatilho e a instrução seguida | |
