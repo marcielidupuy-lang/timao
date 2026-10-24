@@ -30,6 +30,20 @@ Um painel único da implantação, com um agente que trabalha nos bastidores e c
 - Faz o primeiro contato com os champions: identifica quem é quem, agenda a reunião, monta a pauta e confirma um dia antes.
 - Cadastra os usuários no prefeitura.aprova.
 
+## Instruções do agente
+
+A pasta [INSTRUCTIONS](INSTRUCTIONS/) tem uma instrução por responsabilidade. O mapa de quem chama o quê está em [INSTRUCTIONS/README.md](INSTRUCTIONS/README.md).
+
+| Instrução | Responsabilidade |
+|---|---|
+| 00-regras-gerais | Tom, canais, limites e quando chamar um humano |
+| 01-gatilhos | Roteador: classifica o evento e chama a instrução certa |
+| 02-acionaveis-reuniao | Reunião vira tarefas com dono e prazo e tickets preenchidos |
+| 03-fup-whatsapp | Cobra o que está atrasado há 2 dias e responde sobre prazos |
+| 04-videos-validacao | Gera o vídeo de cada ajuste e trata ✓ ✗ 📅 |
+| 05-champions | Primeiro contato: quem é quem, agenda, pauta e confirmação |
+| 06-cadastro-usuarios | Link de cadastro, conferência e cadastro no prefeitura.aprova |
+
 ## Indicadores que mexem
 
 | Métrica do desafio | Como o Timão melhora |
