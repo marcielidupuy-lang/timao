@@ -1,5 +1,5 @@
 (() => {
-  const KEY = "timao-state-v2";
+  const KEY = "timao-state-v3";
   const $ = (s, el = document) => el.querySelector(s);
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -193,7 +193,10 @@
   }
 
   // ---------- peças reaproveitadas ----------
-  const hero = (eyebrow, h1, sub, meta) => `<section class="hero"><p class="eyebrow"><span class="dot-c"></span>${eyebrow}</p><h1>${h1}<span>${sub}</span></h1>${meta ? `<p class="hero-meta">${meta}</p>` : ""}</section>`;
+  const ENTRADA = ["carteira", "visao", "inicio"];
+  const hero = (eyebrow, h1, sub, meta) => !ENTRADA.includes(PAGE)
+    ? `<section class="phead"><h1>${h1}<span>${sub}</span></h1>${meta ? `<p>${meta}</p>` : ""}</section>`
+    : `<section class="hero"><p class="eyebrow"><span class="dot-c"></span>${eyebrow}</p><h1>${h1}<span>${sub}</span></h1>${meta ? `<p class="hero-meta">${meta}</p>` : ""}</section>`;
   const secTitle = (t, hint = "", extra = "") => `<div class="sec-title"><h2>${t}</h2>${hint ? `<span class="hint">${hint}</span>` : ""}${extra}</div>`;
   const kpi = (k, v, s, cls = "", bar) => `<div class="kpi ${cls}"><span class="k">${k}</span><span class="v">${v}</span>${bar !== undefined ? `<div class="bar"><i style="width:${bar}%"></i></div>` : `<span class="s">${s}</span>`}</div>`;
 
@@ -410,10 +413,10 @@
     return hero("Minha fila", "O que é seu.", "O resto o agente resolve.", "Ajustes pedidos pela prefeitura, cobranças que precisam de você e tarefas da Aprova.") +
       grp("Ajustes pedidos pela prefeitura", "viram vídeo novo para validar", a.map((v) => ({ tipo: "ajuste", v }))) +
       grp("Prefeitura atrasada", "o agente já mandou FUP; depois de 2 sem resposta, é com você", s.map((t) => ({ tipo: "cobrar", t }))) +
-      grp("Tarefas da Aprova e do agente", "fase ativa", m.map((t) => ({ tipo: "tarefa", t })));
+      `<div class="block-sm">${secTitle("Tarefas da Aprova e do agente", "", autoBtn())}<div class="queue">${m.map((t) => filaItemHTML({ tipo: "tarefa", t })).join("") || `<p class="empty">Nada aqui.</p>`}</div></div>`;
   };
 
-  VIEWS["i/fases"] = () => hero("Fases e tarefas", "Fases da implantação.", "Tudo que está previsto.", "Você conclui o que é da Aprova. O que é da prefeitura, ela marca no painel dela.") + fasesHTML();
+  VIEWS["i/fases"] = () => hero("Fases e tarefas", "Fases da implantação.", "Tudo que está previsto.", "Você conclui o que é da Aprova. O que é da prefeitura, ela marca no painel dela.") + `<div class="sec-title"><span class="hint">Clique na seta → de uma tarefa do agente pra ele executar, ou ligue o Automode.</span>${autoBtn()}</div>` + fasesHTML();
 
   VIEWS["i/reunioes"] = () => {
     const ag = proxReunioes(), re = S.reunioes.filter((r) => r.status === "realizada").sort((a, b) => d(b.data) - d(a.data));
@@ -770,6 +773,23 @@
       "Preenchendo os tickets de cada processo com as regras",
       "Criando as perguntas que faltam como tarefa da prefeitura"
     ], fim: "Regras coletadas e tickets preenchidos. O que ficou em aberto virou pergunta no WhatsApp do champion." };
+    if (tit.includes("pauta")) return { instr: "05-champions", passos: [
+      "Lendo as respostas do champion e os processos prioritários",
+      "Listando o que falta decidir em cada processo",
+      "Montando a pauta em 4 tópicos",
+      "Anexando a pauta ao convite da reunião"
+    ], fim: "Pauta pronta e anexada ao convite. A prefeitura vê a pauta na tela de Reuniões." };
+    if (tit.includes("confirmar")) return { instr: "05-champions", passos: [
+      "Conferindo a agenda da implantadora",
+      "Mandando a confirmação no WhatsApp da champion",
+      "Registrando a resposta no Pylon"
+    ], fim: "Reunião confirmada no WhatsApp. Se alguém desmarcar, o agente oferece 2 novos horários." };
+    if (tit.includes("preencher") || tit.includes("ticket")) return { instr: "02-acionaveis-reuniao", passos: [
+      "Lendo a transcrição da última reunião",
+      "Separando as regras citadas para o processo",
+      `Preenchendo o ${t.ticket || "ticket"} com as regras e o trecho da fala`,
+      "Criando pergunta pra prefeitura onde a regra ficou ambígua"
+    ], fim: "Ticket preenchido com as regras da reunião. Uma dúvida virou tarefa da prefeitura." };
     if (tit.includes("champion")) return { instr: "05-champions", passos: [
       "Lendo o organograma e os contatos do contrato",
       "Mandando a apresentação no WhatsApp de cada secretaria",
@@ -782,13 +802,13 @@
     return { instr: "01-gatilhos", passos: ["Lendo o contexto da tarefa no Pylon", "Executando a tarefa", "Registrando o resultado no Pylon"], fim: "Tarefa executada e registrada no Pylon." };
   }
   let runT = null;
-  function runAgent(id) {
+  function runAgent(id, done, prog) {
     const t = findTask(id);
-    if (!t || t.feito) return;
+    if (!t || t.feito) { if (done) done(); return; }
     const p = plano(t);
     const dr = $("#drawer");
     clearTimeout(runT);
-    dr.innerHTML = `<div class="dr-h"><span class="dr-k"><span class="pulse"></span>Agente executando</span><button class="dr-x" data-drclose="1" aria-label="Fechar">${I.x}</button></div>
+    dr.innerHTML = `<div class="dr-h"><span class="dr-k"><span class="pulse"></span>${prog ? `Automode · ${prog.i} de ${prog.n}` : "Agente executando"}</span><button class="dr-x" data-drclose="1" aria-label="Fechar">${I.x}</button></div>
       <h3>${esc(t.titulo)}</h3>
       <p class="dr-instr">Seguindo <a href="${REPO}${p.instr}.md" target="_blank" rel="noopener">${p.instr}</a>${t.ticket ? ` · ${esc(t.ticket)}` : ""}</p>
       <ol class="steps">${p.passos.map((s) => `<li><span class="sp"></span><span>${esc(s)}</span></li>`).join("")}</ol>
@@ -807,6 +827,7 @@
       $(".dr-k", dr).classList.add("ok");
       $(".dr-out", dr).innerHTML = `<p>${esc(p.fim)}</p><button class="btn sm ghost" data-drclose="1">Fechar</button>`;
       refresh();
+      if (done) runT = setTimeout(done, 1200);
     };
     step();
   }
@@ -875,7 +896,38 @@
     };
     step();
   }
+  // Automode: o agente executa sozinho, em sequência, todas as tarefas dele na fase ativa.
+  let AUTO = false;
+  function startAuto() {
+    const fila = minhas().filter((t) => t.dono === "agente").sort((a, b) => d(a.data) - d(b.data)).map((t) => t.id);
+    if (!fila.length) { toast("Nenhuma tarefa do agente pendente."); return; }
+    AUTO = true;
+    log("manual", `Automode ligado: o agente vai executar ${fila.length} tarefas sozinho`);
+    save(); refresh();
+    let i = 0;
+    const next = () => {
+      if (!AUTO) return;
+      if (i >= fila.length) {
+        AUTO = false;
+        log("manual", `Automode concluiu ${fila.length} tarefas`);
+        save(); refresh();
+        toast(`Automode: o agente concluiu ${fila.length} tarefas.`);
+        return;
+      }
+      const id = fila[i++];
+      runAgent(id, next, { i, n: fila.length });
+    };
+    next();
+  }
+  function stopAuto() {
+    AUTO = false;
+    clearTimeout(runT);
+    refresh();
+    toast("Automode desligado. O agente parou.");
+  }
+  const autoBtn = () => `<button class="auto ${AUTO ? "on" : ""}" data-auto="1" aria-pressed="${AUTO}"><span class="sw"></span><b>Automode</b><small>${AUTO ? "executando…" : "o agente faz sozinho"}</small></button>`;
   function closeDrawer() {
+    if (AUTO) { AUTO = false; refresh(); }
     const dr = $("#drawer");
     dr.classList.remove("on");
     clearTimeout(runT);
@@ -902,6 +954,7 @@
       return;
     }
     if ((x = el("[data-run]"))) { runAgent(x.dataset.run); return; }
+    if (el("[data-auto]")) { AUTO ? stopAuto() : startAuto(); return; }
     if (el("[data-drclose]")) { closeDrawer(); return; }
     if ((x = el("[data-task]"))) {
       const t = findTask(x.dataset.task);

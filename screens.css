@@ -205,3 +205,34 @@
 .dr-redo textarea { width: 100%; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font: inherit; font-size: 13.5px; resize: vertical; outline: none; }
 .dr-redo textarea:focus { border-color: #cfcfd6; box-shadow: 0 0 0 4px #f4f4f6; }
 .dr-out .btn { margin-right: 6px; }
+
+/* cabeçalho compacto das telas internas */
+.phead { padding: 22px 0 14px; }
+.phead h1 { font-size: 22px; font-weight: 700; letter-spacing: -.5px; line-height: 1.3; }
+.phead h1 span { color: var(--faint); font-weight: 600; margin-left: 8px; }
+.phead p { color: var(--muted); font-size: 13px; margin-top: 2px; }
+.phead + .block-sm, .phead + .sec-title { margin-top: 8px; }
+.big-h { margin: 22px 0 18px; text-align: left; }
+.big-h .eyebrow { display: none; }
+.big-h h2 { font-size: 22px; letter-spacing: -.5px; }
+.big-h h2 span { display: inline; margin-left: 8px; font-weight: 600; }
+.big-h .lead { margin: 2px 0 0; font-size: 13px; max-width: none; }
+.center { text-align: left; margin-bottom: 18px; }
+
+/* Automode */
+.auto { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: #fff; border-radius: 99px; padding: 5px 14px 5px 6px; font-size: 13px; }
+.auto:hover { border-color: #cfcfd6; }
+.auto .sw { width: 34px; height: 20px; border-radius: 99px; background: #e4e4e7; position: relative; transition: background .2s; flex: none; }
+.auto .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.2); transition: transform .2s; }
+.auto b { font-weight: 600; }
+.auto small { color: var(--muted); font-size: 12px; }
+.auto.on { border-color: var(--cyan); background: var(--cyan-soft); }
+.auto.on .sw { background: var(--cyan); }
+.auto.on .sw::after { transform: translateX(14px); }
+.auto.on small { color: var(--cyan-d); }
+@media (max-width: 860px) {
+  .phead h1 { font-size: 19px; }
+  .phead h1 span { display: block; margin-left: 0; }
+  .big-h h2 span { display: block; margin-left: 0; }
+  .auto small { display: none; }
+}

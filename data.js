@@ -36,7 +36,14 @@ window.DATA = {
         { id: "t3", titulo: "Enviar lei municipal do Alvará (PDF)", data: "2026-10-22T14:00", dono: "prefeitura", feito: false, ticket: "#18342" },
         { id: "t4", titulo: "Validar vídeo do Habite-se", data: "2026-10-23T17:00", dono: "prefeitura", feito: true, ticket: "#18310" },
         { id: "t5", titulo: "Devolver planilha de usuários da Sec. de Obras", data: "2026-10-25T12:00", dono: "prefeitura", feito: false },
-        { id: "t6", titulo: "Ajustar formulário de Protocolo Geral", data: "2026-10-26T18:00", dono: "agente", feito: false, ticket: "#18355" }
+        { id: "t6", titulo: "Ajustar formulário de Protocolo Geral", data: "2026-10-26T18:00", dono: "agente", feito: false, ticket: "#18355" },
+        { id: "t12", titulo: "Preencher ticket da Certidão de Uso do Solo com as regras da reunião", data: "2026-10-25T10:00", dono: "agente", feito: false, ticket: "#18361" },
+        { id: "t13", titulo: "Cadastrar 14 analistas de Obras no prefeitura.aprova", data: "2026-10-25T16:00", dono: "agente", feito: false },
+        { id: "t14", titulo: "Montar pauta da reunião com a Fazenda", data: "2026-10-26T12:00", dono: "agente", feito: false },
+        { id: "t15", titulo: "Confirmar reunião com a Fazenda no WhatsApp", data: "2026-10-27T09:00", dono: "agente", feito: false },
+        { id: "t16", titulo: "Ajustar formulário de Poda de Árvore com a foto obrigatória", data: "2026-10-27T15:00", dono: "agente", feito: false, ticket: "#18366" },
+        { id: "t17", titulo: "Revisar com a Ana as regras do Alvará antes do go-live", data: "2026-10-28T11:00", dono: "aprova", feito: false, ticket: "#18342" },
+        { id: "t18", titulo: "Treinar analistas de Obras no novo Habite-se", data: "2026-10-30T14:00", dono: "aprova", feito: false }
       ]
     },
     {
