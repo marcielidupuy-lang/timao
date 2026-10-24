@@ -15,7 +15,7 @@
     ["indicadores", "Indicadores", "Entrega, o que está com a prefeitura, go-live e agenda"],
     ["ai", "ai.aprova", "Campo de conversa e atalhos do agente no Início"],
     ["validacoes", "Validações", "Vídeos para aprovar"],
-    ["reunioes", "Reuniões", "Tela com todas as reuniões"],
+    ["reunioes", "Agenda", "Calendário com entregas, reuniões e prazos"],
     ["equipe", "Minha equipe", "Usuários e convite pelo WhatsApp"]
   ];
   let S = load();
@@ -158,7 +158,7 @@
     c: [
       { id: "inicio", nome: "Início", ic: "home", badge: () => doCliente().filter(visivel).length + (PN().blocos.validacoes ? vidsPend().length : 0) },
       { id: "validacoes", nome: "Validações", ic: "video", badge: () => vidsPend().length, bloco: "validacoes" },
-      { id: "reunioes", nome: "Reuniões", ic: "meet", bloco: "reunioes" },
+      { id: "agenda", nome: "Agenda", ic: "cal", bloco: "reunioes" },
       { id: "equipe", nome: "Minha equipe", ic: "users", bloco: "equipe" }
     ]
   };
@@ -494,11 +494,14 @@
       <div class="queue dr-q">${todoItems().join("") || `<p class="empty">Tudo em dia 🎉</p>`}</div>`;
   }
   function agendaHTML() {
-    const ag = proxReunioes(), re = S.reunioes.filter((r) => r.status === "realizada").sort((a, b) => d(b.data) - d(a.data));
+    // Das reuniões já feitas, só as dos últimos 30 dias: o resto está na Agenda.
+    const corte = now() - 30 * 86400000;
+    const ag = proxReunioes(), re = S.reunioes.filter((r) => r.status === "realizada" && d(r.data) >= corte).sort((a, b) => d(b.data) - d(a.data));
     return `<h3>Agenda de reunião</h3>
       <p class="dr-instr">A pauta chega antes e o combinado fica por escrito.</p>
       <div class="dr-sec">Próximas</div><div class="dr-reus">${ag.map((r) => reuniaoHTML(r)).join("") || `<p class="empty">Nenhuma reunião marcada.</p>`}</div>
-      ${re.length ? `<div class="dr-sec">Já aconteceram</div><div class="dr-reus">${re.map((r) => reuniaoHTML(r)).join("")}</div>` : ""}`;
+      ${re.length ? `<div class="dr-sec">Já aconteceram · últimos 30 dias</div><div class="dr-reus">${re.map((r) => reuniaoHTML(r)).join("")}</div>` : ""}
+      ${ROLE === "c" && PN().blocos.reunioes ? `<div class="dr-out"><a class="btn sm ghost" href="#/c/agenda" data-drclose="1">${I.cal}Abrir a agenda completa</a></div>` : ""}`;
   }
 
   function evitadaHTML() {
@@ -674,11 +677,53 @@
 
   VIEWS["c/validacoes"] = () => `<section class="big-h"><p class="eyebrow"><span class="dot-c"></span>Validações</p><h2>Assista, aprove, pronto.<span>Sem precisar de reunião.</span></h2><p class="lead">Cada vídeo mostra só o que mudou no formulário. Se algo estiver errado, fale com o ai.aprova ali mesmo.</p></section>` + validacoesHTML();
 
-  VIEWS["c/reunioes"] = () => {
-    const ag = proxReunioes(), re = S.reunioes.filter((r) => r.status === "realizada").sort((a, b) => d(b.data) - d(a.data));
-    return hero("Reuniões", "Reuniões curtas.", "Com pauta e combinado por escrito.", "") +
-      `<div class="block-sm">${secTitle("Próximas")}<div class="reu-grid">${ag.map((r) => reuniaoHTML(r)).join("") || `<p class="empty">Nenhuma reunião marcada.</p>`}</div></div>
-       <div class="block-sm">${secTitle("Já aconteceram")}<div class="reu-grid">${re.map((r) => reuniaoHTML(r)).join("")}</div></div>`;
+  // ---------- agenda da prefeitura (calendário) ----------
+  // Tudo que tem data no sistema: entregas do contrato, reuniões, prazos da equipe e o go-live.
+  const TIPOS = { late: "Atrasado", tarefa: "Sua equipe", reuniao: "Reunião", entrega: "Entrega do contrato", golive: "Go-live" };
+  const ymd = (x) => { const p = (n) => String(n).padStart(2, "0"); return `${x.getFullYear()}-${p(x.getMonth() + 1)}-${p(x.getDate())}`; };
+  let CAL = null;
+  function eventosAgenda() {
+    const ev = [];
+    S.reunioes.forEach((r) => ev.push({ iso: r.data, tipo: "reuniao", t: r.titulo, s: `${hora(r.data)} · ${r.secretaria}${r.status === "realizada" ? " · realizada" : r.presenca ? " · presença confirmada" : ""}`, feito: r.status === "realizada" }));
+    Object.values(window.DATA.escopo || {}).flat().forEach((x) => {
+      const late = x.status !== "entregue" && d(x.prazo + "T23:59") < now();
+      ev.push({ iso: x.prazo + "T09:00", tipo: /^go-live/i.test(x.t) ? "golive" : "entrega", t: x.t, s: x.status === "entregue" ? "entregue" : late ? "atrasada" : x.d, feito: x.status === "entregue", late });
+    });
+    allTasks().filter((t) => t.dono === "prefeitura" && visivel(t)).forEach((t) =>
+      ev.push({ iso: t.data, tipo: "tarefa", t: t.titulo, s: t.feito ? "feito" : isLate(t) ? `atrasada desde ${dia(t.data)}` : `até ${hora(t.data)}`, feito: t.feito, late: isLate(t) }));
+    return ev.sort((a, b) => d(a.iso) - d(b.iso));
+  }
+  const evClasse = (e) => `${e.late ? "late" : e.tipo}${e.feito ? " feito" : ""}`;
+  const evLinha = (e, comDia) => `<li><span class="ag-dot ${evClasse(e)}"></span><span class="ag-t"><b>${esc(e.t)}</b><small>${comDia ? `${diaSem(e.iso)} · ` : ""}${esc(e.s)}</small></span><span class="ag-k ${evClasse(e)}">${e.late ? "atrasado" : e.feito ? "feito" : TIPOS[e.tipo]}</span></li>`;
+
+  VIEWS["c/agenda"] = () => {
+    if (!CAL) { const n = now(); CAL = { y: n.getFullYear(), m: n.getMonth(), sel: ymd(n) }; }
+    const ev = eventosAgenda(), porDia = {};
+    ev.forEach((e) => (porDia[e.iso.slice(0, 10)] = porDia[e.iso.slice(0, 10)] || []).push(e));
+    const first = new Date(CAL.y, CAL.m, 1), fimMes = new Date(CAL.y, CAL.m + 1, 0).getDate();
+    const semanas = Math.ceil((first.getDay() + fimMes) / 7), hoje = ymd(now());
+    const cel = Array.from({ length: semanas * 7 }, (_, i) => {
+      const x = new Date(CAL.y, CAL.m, 1 - first.getDay() + i), k = ymd(x), lista = porDia[k] || [];
+      return `<button type="button" class="cal-d ${x.getMonth() !== CAL.m ? "out" : ""} ${k === hoje ? "today" : ""} ${k === CAL.sel ? "sel" : ""}" data-caldia="${k}" aria-label="${diaSem(k + "T12:00")}${lista.length ? `, ${lista.length} evento${lista.length > 1 ? "s" : ""}` : ""}">
+        <span class="n">${x.getDate()}</span><span class="cal-evs">${lista.slice(0, 3).map((e) => `<i class="ev ${evClasse(e)}">${esc(e.t)}</i>`).join("")}${lista.length > 3 ? `<i class="mais">+${lista.length - 3}</i>` : ""}</span></button>`;
+    }).join("");
+    const doDia = porDia[CAL.sel] || [];
+    const prox = ev.filter((e) => !e.feito && d(e.iso) >= d(hoje + "T00:00")).slice(0, 6);
+    const atras = ev.filter((e) => e.late);
+    return hero("Agenda", "Agenda.", "Entregas, reuniões e prazos.", "Tudo que tem data na implantação, num lugar só. Clique num dia para ver o que tem nele.") +
+      `<div class="grid ag-grid"><div class="col-main">
+        <div class="cal-h"><h2>${first.toLocaleDateString("pt-BR", { month: "long", year: "numeric" }).replace(/^./, (l) => l.toUpperCase())}</h2>
+          <button class="btn sm ghost" data-calmes="-1" aria-label="Mês anterior">‹</button><button class="btn sm ghost" data-calhoje="1">Hoje</button><button class="btn sm ghost" data-calmes="1" aria-label="Próximo mês">›</button></div>
+        <div class="cal"><div class="cal-w">${["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((w) => `<span>${w}</span>`).join("")}</div><div class="cal-g">${cel}</div></div>
+        <div class="cal-leg">${Object.entries(TIPOS).map(([k, l]) => `<span class="${k}">${l}</span>`).join("")}</div>
+      </div>
+      <aside class="col-side">
+        <section class="card"><div class="card-h"><h3>${diaSem(CAL.sel + "T12:00")}</h3></div>
+          ${doDia.length ? `<ul class="ag-list">${doDia.map((e) => evLinha(e)).join("")}</ul>` : `<p class="empty">Nada marcado neste dia.</p>`}</section>
+        ${atras.length ? `<section class="card"><div class="card-h"><h3>Atrasado</h3></div><ul class="ag-list">${atras.map((e) => evLinha(e, true)).join("")}</ul></section>` : ""}
+        <section class="card"><div class="card-h"><h3>Próximas datas</h3></div>
+          ${prox.length ? `<ul class="ag-list">${prox.map((e) => evLinha(e, true)).join("")}</ul>` : `<p class="empty">Nada pela frente.</p>`}</section>
+      </aside></div>`;
   };
 
   VIEWS["c/equipe"] = () => hero("Minha equipe", "Quem usa o sistema.", "Convide pelo WhatsApp.", "Mande o link, a pessoa preenche os dados e a Aprova libera o acesso.") +
@@ -697,19 +742,28 @@
       ]
     } : atalhosPrefeitura())));
   }
-  // Atalhos da prefeitura: cada botão já manda o pedido pro ai.aprova; a conversa só abre quando precisa.
+  // Atalhos da prefeitura: cada botão manda o pedido pro chat ao lado. O que está atrasado vem primeiro.
   function atalhosPrefeitura() {
     const vids = vidsPend().length;
-    const doc = doCliente().filter((t) => /enviar|devolver/i.test(t.titulo)).sort((a, b) => isLate(b) - isLate(a))[0];
+    const envio = (t) => /enviar|devolver/i.test(t.titulo);
+    const nomeEnvio = (t) => "Enviar: " + t.titulo.replace(/^(enviar|devolver)\s+(.)/i, (m, v, l) => l.toUpperCase());
+    const minhas = doCliente().filter(visivel).sort((a, b) => d(a.data) - d(b.data));
+    const atrasadas = minhas.filter(isLate).map((t) => envio(t)
+      ? { t: nomeEnvio(t), d: `Atrasado desde ${dia(t.data)}. A Aprova identifica a pendência e dá baixa.`, acao: "anexar", hot: true }
+      : { t: t.titulo, d: `Atrasada desde ${dia(t.data)}.`, msg: `Quero resolver: ${t.titulo}`, hot: true });
+    const doc = minhas.find((t) => envio(t) && !isLate(t));
     return {
       compacto: true,
-      placeholder: "Escreva uma mensagem, grave um áudio ou anexe a lei…",
+      saudacao: `Oi, ${esc(S.cliente.contato)}! Clique num atalho ou escreva aqui. Pode mandar texto, áudio ou anexo.`,
+      placeholder: "Escreva para a Aprova…",
       sugs: [
-        { ic: "video", t: "Validar processos", d: vids ? `${vids} vídeo${vids > 1 ? "s esperam" : " espera"} a sua aprovação.` : "Nenhum vídeo esperando agora.", msg: "Validar processos" },
-        { ic: "upload", t: doc ? `Enviar: ${doc.titulo.replace(/^(enviar|devolver)\s+(.)/i, (m, v, l) => l.toUpperCase())}` : "Enviar um documento", d: doc && isLate(doc) ? `Atrasado desde ${dia(doc.data)}. A Aprova identifica a pendência e dá baixa.` : "Lei, foto ou planilha. A Aprova identifica a pendência e dá baixa.", acao: "anexar", hot: doc && isLate(doc) },
-        { ic: "form", t: "Alterar um formulário", d: "Diga o que muda. Pode mandar PDF, foto ou áudio.", msg: "Quero alterar um formulário" },
-        { ic: "users", t: "Cadastrar minha equipe", d: "Envia o link de cadastro no WhatsApp.", msg: "Cadastro de usuários" },
-        { ic: "cal", t: "Próximo passo e prazos", d: "O que vem agora e quando é o go-live.", msg: "Qual o próximo passo e o prazo?" }
+        ...atrasadas,
+        ...(PN().blocos.validacoes && vids ? [{ t: "Validar processos", d: `${vids} vídeo${vids > 1 ? "s esperam" : " espera"} a sua aprovação.`, msg: "Validar processos" }] : []),
+        doc ? { t: nomeEnvio(doc), d: `Até ${dia(doc.data)}. A Aprova identifica a pendência e dá baixa.`, acao: "anexar" }
+          : { t: "Enviar um documento", d: "Lei, foto ou planilha. A Aprova identifica a pendência e dá baixa.", acao: "anexar" },
+        { t: "Alterar um formulário", d: "Diga o que muda. Pode mandar PDF, foto ou áudio.", msg: "Quero alterar um formulário" },
+        { t: "Cadastrar minha equipe", d: "Envia o link de cadastro no WhatsApp.", msg: "Cadastro de usuários" },
+        { t: "Próximo passo e prazos", d: "O que vem agora e quando é o go-live.", msg: "Qual o próximo passo e o prazo?" }
       ]
     };
   }
@@ -722,12 +776,15 @@
   }
 
   // ---------- ai.aprova (simulado na demo; em produção é o agente) ----------
-  function aiBox({ placeholder, sugs = [], ctx = null, compacto = false }) {
+  function aiBox({ placeholder, sugs = [], ctx = null, compacto = false, saudacao = "" }) {
     const box = document.createElement("div");
     box.className = compacto ? "ai compacto" : "ai";
-    const sugsHTML = sugs.length ? `<ul class="sugs">${sugs.map((s) => `<li><button type="button" class="sug ${s.hot ? "hot" : ""}" data-msg="${esc(s.msg || s.t)}"${s.acao ? ` data-acao="${s.acao}"` : ""}>${I[s.ic]}<b>${esc(s.t)}</b><span>${esc(s.d)}</span></button></li>`).join("")}</ul>` : "";
-    // Compacto: os atalhos vêm primeiro e a conversa fica atrás de um botão.
-    box.innerHTML = (compacto ? `${sugsHTML}<button type="button" class="ai-open">${I.chat}<span>Escrever para a Aprova</span><small>texto, áudio ou anexo</small></button><div class="ai-chat" hidden>` : "") + `<div class="ai-log"></div>
+    // Compacto: atalhos pequenos com seta numa coluna e o chat ao lado; a descrição vai no title.
+    const sugHTML = (s) => compacto
+      ? `<button type="button" class="sug ${s.hot ? "hot" : ""}" data-msg="${esc(s.msg || s.t)}"${s.acao ? ` data-acao="${s.acao}"` : ""} title="${esc(s.d)}"><b>${esc(s.t)}</b>${s.hot ? `<span class="late-chip">atrasado</span>` : ""}<span class="arr">${I.right}</span></button>`
+      : `<button type="button" class="sug" data-msg="${esc(s.msg || s.t)}">${I[s.ic]}<b>${esc(s.t)}</b><span>${esc(s.d)}</span></button>`;
+    const sugsHTML = sugs.length ? `<ul class="sugs">${sugs.map((s) => `<li>${sugHTML(s)}</li>`).join("")}</ul>` : "";
+    box.innerHTML = (compacto ? `${sugsHTML}<div class="ai-chat">` : "") + `<div class="ai-log"></div>
       <form class="box">
         <textarea rows="2" placeholder="${esc(placeholder)}" aria-label="Mensagem para o ai.aprova"></textarea>
         <div class="box-row">
@@ -743,12 +800,6 @@
     const logBox = $(".ai-log", box);
     const input = $("textarea", box);
     const fileIn = $("input[type=file]", box);
-    const openChat = () => {
-      if (!compacto) return;
-      $(".ai-chat", box).hidden = false;
-      $(".ai-open", box).hidden = true;
-    };
-    if (compacto) $(".ai-open", box).addEventListener("click", () => { openChat(); input.focus(); });
     const say = (who, html, cls = "") => {
       const m = document.createElement("div");
       m.className = `msg ${who} ${cls}`;
@@ -757,6 +808,7 @@
       logBox.scrollTop = logBox.scrollHeight;
       return m;
     };
+    if (saudacao) say("bot", saudacao);
     const send = (text) => {
       if (!text.trim()) return;
       say("user", esc(text));
@@ -768,7 +820,6 @@
     input.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input.value); } });
     box.querySelectorAll(".sug").forEach((b) => b.addEventListener("click", () => {
       if (b.dataset.msg === "__aprovar") return decide(ctx, "aprovado");
-      openChat();
       if (b.dataset.acao === "anexar") {
         say("bot", "Pode mandar a lei, a foto do formulário ou a planilha. Eu vejo a que pendência ela se refere e já dou baixa.");
         fileIn.click();
@@ -779,7 +830,6 @@
     fileIn.addEventListener("change", (e) => {
       const f = e.target.files[0];
       if (!f) return;
-      openChat();
       const chip = document.createElement("div");
       chip.className = "file-chip";
       chip.textContent = "📎 " + f.name;
@@ -1243,6 +1293,20 @@
       return;
     }
     if (e.target.id === "scrim") { closeDrawer(); return; }
+    if ((x = el("[data-calmes]"))) {
+      const n = new Date(CAL.y, CAL.m + Number(x.dataset.calmes), 1);
+      CAL.y = n.getFullYear(); CAL.m = n.getMonth();
+      refresh();
+      return;
+    }
+    if (el("[data-calhoje]")) { CAL = null; refresh(); return; }
+    if ((x = el("[data-caldia]"))) {
+      // Dia de outro mês na grade: o calendário vai pra esse mês.
+      const s = d(x.dataset.caldia + "T12:00");
+      CAL = { y: s.getFullYear(), m: s.getMonth(), sel: x.dataset.caldia };
+      refresh();
+      return;
+    }
     if ((x = el("[data-kpi]"))) {
       // No implantador, "Com a prefeitura" leva à fila; o resto abre o detalhe na lateral.
       if (x.dataset.kpi === "pend" && ROLE === "i") { go("i", "fila"); return; }
