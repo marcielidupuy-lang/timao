@@ -267,16 +267,25 @@
     }).join("");
   }
 
+  // Reunião marcada pelo botão de agendar do vídeo (as antigas, de antes do campo origem, pelo título).
+  const doVideo = (r) => r.origem === "video" || /^Conversa rápida · /.test(r.titulo);
+  let EXCLUIR = null;
   function reuniaoHTML(r, full = true) {
     const ico = { feito: I.check, atrasado: I.clock, andamento: I.bolt };
+    // Só as reuniões marcadas pelo calendário do vídeo de validação podem ser excluídas (com confirmação).
+    const exclui = r.status === "agendada" && doVideo(r)
+      ? (EXCLUIR === r.id
+        ? `<span class="del-q">Excluir esta reunião?</span><button class="btn sm danger" data-delreu="${r.id}">Sim, excluir</button><button class="btn sm ghost" data-delreux="1">Não</button>`
+        : `<button class="btn sm ghost del" data-delreuask="${r.id}">${I.trash}Excluir</button>`)
+      : "";
     const acoes = r.status === "agendada"
       ? (ROLE === "c"
-        ? `<div class="row-btns">${r.presenca ? `<span class="ok-note">${I.check}Presença confirmada</span>` : `<button class="btn sm" data-presenca="${r.id}">Confirmar presença</button>`}<button class="btn sm ghost" data-remarcar="${r.id}">Remarcar</button></div>`
-        : `<div class="row-btns"><span class="hint">${r.presenca ? "Prefeitura confirmou presença" : esc(r.confirmacao || "")}</span></div>`)
+        ? `<div class="row-btns">${r.presenca ? `<span class="ok-note">${I.check}Presença confirmada</span>` : `<button class="btn sm" data-presenca="${r.id}">Confirmar presença</button>`}<button class="btn sm ghost" data-remarcar="${r.id}">Remarcar</button>${exclui}</div>`
+        : `<div class="row-btns"><span class="hint">${r.presenca ? "Prefeitura confirmou presença" : esc(r.confirmacao || "")}</span>${exclui}</div>`)
       : "";
     const titAc = ROLE === "c" ? "O que ficou combinado" : "Acionáveis";
     return `<div class="reu">
-      <div class="k">${esc(r.secretaria)}<span class="st ${r.status}">${r.status === "realizada" ? "Realizada" : "Agendada"}</span></div>
+      <div class="k">${esc(r.secretaria)}<span class="st ${r.status}">${r.status === "realizada" ? "Realizada" : "Agendada"}</span>${doVideo(r) ? `<span class="orig">${I.video}pelo vídeo</span>` : ""}</div>
       <h3>${esc(r.titulo)}</h3>
       <div class="d">${diaSem(r.data)} · ${hora(r.data)}${r.duracao ? ` · ${r.duracao} min` : ""}</div>
       ${full && r.acionaveis ? `<div class="pauta-l">${titAc}</div><ul>${r.acionaveis.map((a) => `<li><span class="ic s-${a.status}">${ico[a.status] || I.dot}</span><span>${esc(a.texto)} <span class="tag ${ROLE === "c" && a.dono === "agente" ? "aprova" : a.dono}">${DONO[ROLE][a.dono]}</span>${ROLE === "i" && a.fup ? `<span class="sub">${esc(a.fup)}</span>` : ""}</span></li>`).join("")}</ul>` : ""}
@@ -1456,6 +1465,17 @@
       save(); toast("FUP aberto no seu WhatsApp."); refresh();
       return;
     }
+    if ((x = el("[data-delreuask]"))) { EXCLUIR = x.dataset.delreuask; refresh(); return; }
+    if (el("[data-delreux]")) { EXCLUIR = null; refresh(); return; }
+    if ((x = el("[data-delreu]"))) {
+      const r = S.reunioes.find((y) => y.id === x.dataset.delreu);
+      if (!r || !doVideo(r)) return;
+      S.reunioes = S.reunioes.filter((y) => y !== r);
+      EXCLUIR = null;
+      log("agenda", `${ROLE === "c" ? S.cliente.contato : "Implantadora"} excluiu a reunião "${r.titulo}" de ${dia(r.data)} às ${hora(r.data)}`);
+      save(); toast("Reunião excluída."); refresh();
+      return;
+    }
     if ((x = el("[data-presenca]"))) {
       const r = S.reunioes.find((y) => y.id === x.dataset.presenca);
       r.presenca = true;
@@ -1508,7 +1528,7 @@
         save(); toast("Mensagem aberta no seu WhatsApp.");
       }
       if (x.dataset.act === "cal") showSlots(sl, (iso) => {
-        S.reunioes.push({ id: "r" + Date.now(), titulo: `Conversa rápida · ${v.processo}`, data: iso, secretaria: v.secretaria, status: "agendada", confirmacao: "Agente confirma no WhatsApp um dia antes", pauta: [`Dúvidas sobre o vídeo do ${v.processo}`, ...v.alteracoes] });
+        S.reunioes.push({ id: "r" + Date.now(), origem: "video", titulo: `Conversa rápida · ${v.processo}`, data: iso, secretaria: v.secretaria, status: "agendada", confirmacao: "Agente confirma no WhatsApp um dia antes", pauta: [`Dúvidas sobre o vídeo do ${v.processo}`, ...v.alteracoes] });
         log("agenda", `Conversa de 15 min sobre o ${v.processo} agendada para ${dia(iso)} às ${hora(iso)}. Pauta montada com as alterações do vídeo`);
         save(); toast(`Reunião solicitada para ${dia(iso)} às ${hora(iso)}. Convite enviado no WhatsApp.`);
       });
