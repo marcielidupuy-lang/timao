@@ -655,7 +655,6 @@
       <div class="split vg-split">
         <div class="split-l">
           <div class="block-sm">${secTitle("Próximas reuniões", "", `<a class="more" href="#/i/agenda">Agenda ${I.right}</a>`)}<div class="reu-grid">${prox.slice(0, 2).map((r) => reuniaoHTML(r, false)).join("") || `<p class="empty">Nenhuma reunião marcada.</p>`}</div></div>
-          <div class="block-sm"><section class="card"><div class="card-h"><h3>Agente em ação</h3><span class="live"><span class="dot"></span>ao vivo</span></div>${feedHTML(5)}<a class="more" href="#/i/agente">Execuções do agente ${I.right}</a></section></div>
         </div>
         <aside class="split-r"><section class="chat-card"><h2 class="ask-h">O que o agente faz por você agora?</h2><div data-ai="i"></div></section></aside>
       </div>
