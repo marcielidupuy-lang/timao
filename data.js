@@ -49,31 +49,10 @@ window.DATA = {
   ],
 
   // Outras implantações da mesma implantadora (só o resumo, para a carteira).
-  // fila: o que está parado em cada lado. lado: mim | cliente | agente; tom: red | amber | cyan.
   carteira: [
-    { nome: "Serra Azul", uf: "SP", fase: "Fase 2 · Fazenda e Saúde", pct: 64, atrasadas: 0, videos: 2, ajustes: 0, proxima: "2026-10-27T14:00", meta: "2026-11-20", saude: "ok",
-      fila: [
-        { lado: "mim", ic: "clipboard", t: "Treinar analistas da Fazenda", s: "até 29/10 às 14:00" },
-        { lado: "cliente", ic: "video", tom: "cyan", t: "Validar 2 vídeos: ITBI e Certidão Negativa", s: "enviados ontem" },
-        { lado: "agente", ic: "bolt", t: "Montar pauta da reunião com a Saúde", s: "até 26/10" }
-      ] },
-    { nome: "Porto Claro", uf: "PR", fase: "Fase 1 · Obras", pct: 38, atrasadas: 3, videos: 5, ajustes: 2, proxima: "2026-10-29T09:30", meta: "2026-12-15", saude: "risco",
-      fila: [
-        { lado: "mim", ic: "x", tom: "red", t: "Alvará: ajuste pedido", s: "“Taxa tem que ser por metro quadrado”", urg: true },
-        { lado: "mim", ic: "x", tom: "red", t: "Habite-se: ajuste pedido", s: "“Falta o campo de matrícula”", urg: true },
-        { lado: "cliente", ic: "clock", tom: "red", t: "Enviar código de obras (PDF)", s: "atrasada desde 18/10 · FUP enviado", urg: true },
-        { lado: "cliente", ic: "clock", tom: "red", t: "Indicar champion da Fazenda", s: "atrasada desde 20/10 · FUP enviado", urg: true },
-        { lado: "cliente", ic: "clock", tom: "red", t: "Devolver planilha de usuários", s: "atrasada desde 21/10 · FUP enviado", urg: true },
-        { lado: "cliente", ic: "video", tom: "cyan", t: "Validar 5 vídeos de Obras", s: "o mais antigo há 4 dias" },
-        { lado: "agente", ic: "bolt", t: "Ajustar formulário do Alvará", s: "#20114 · até 27/10" }
-      ] },
-    { nome: "Rio Fundo", uf: "MG", fase: "Kickoff", pct: 12, atrasadas: 1, videos: 0, ajustes: 0, proxima: "2026-10-25T10:00", meta: "2027-01-29", saude: "atencao",
-      fila: [
-        { lado: "mim", ic: "meet", t: "Conduzir o kickoff", s: "25/10 às 10:00 · pauta pronta" },
-        { lado: "cliente", ic: "clock", tom: "red", t: "Enviar organograma das secretarias", s: "atrasada desde 22/10 · FUP enviado", urg: true },
-        { lado: "agente", ic: "bolt", t: "Confirmar kickoff no WhatsApp", s: "hoje às 16:00" },
-        { lado: "agente", ic: "bolt", t: "Identificar champions das 9 secretarias", s: "até 31/10" }
-      ] }
+    { nome: "Serra Azul", uf: "SP", fase: "Fase 2 · Fazenda e Saúde", pct: 64, atrasadas: 0, videos: 2, ajustes: 0, proxima: "2026-10-27T14:00", saude: "ok" },
+    { nome: "Porto Claro", uf: "PR", fase: "Fase 1 · Obras", pct: 38, atrasadas: 3, videos: 5, ajustes: 2, proxima: "2026-10-29T09:30", saude: "risco" },
+    { nome: "Rio Fundo", uf: "MG", fase: "Kickoff", pct: 12, atrasadas: 1, videos: 0, ajustes: 0, proxima: "2026-10-25T10:00", saude: "atencao" }
   ],
 
   fases: [
